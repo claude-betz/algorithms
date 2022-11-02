@@ -5,7 +5,7 @@ import(
 	"testing"
 )
 
-var tests = []struct {
+var ffTests = []struct {
 	pattern string
 	output []int
 }{
@@ -13,22 +13,41 @@ var tests = []struct {
 	{"ababaa", []int{0,0,1,2,3,1}},
 }
 
+var kmpTests = []struct {
+	str 	string
+	pattern string
+	output []int
+}{
+	{"ababd", "b", []int{1,3}},
+	{"ababaa", "aba", []int{0,2}},
+	{"abababs", "abs", []int{4}},
+}
+
 func TestFailureFunction(t *testing.T) {
 	
-	for _, tt := range tests {
+	for _, tt := range ffTests {
 		fmt.Printf("\npattern: %s\n", tt.pattern)
 
 		ff := computeFailureFunction(tt.pattern)
 		eq := testEquality(tt.output, ff)
 		if eq == false {
 			t.Errorf("expected: %v, got: %v\n", tt.output, ff)
+		}
+	}
+}
 
+func TestKMP(t *testing.T) {
+	
+	for _, tt := range kmpTests {	
+		kmp := KMP(tt.str, tt.pattern) 
+		eq := testEquality(tt.output, kmp)
+		if eq == false {
+			t.Errorf("expected: %v, got: %v\n", tt.output, kmp)
 		}
 	}
 }
 
 func testEquality(a, b []int) bool {
-	fmt.Printf("a: %v, b: %v\n", a, b)
 	if len(a) != len(b) {
 		return false
 	}
