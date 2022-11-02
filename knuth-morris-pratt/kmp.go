@@ -1,8 +1,27 @@
 package main
 
+import (
+	"fmt"
+)
+
+var(
+	patterns = []string{
+		"abababaab",
+		"aaaaaa",
+		"abbaabb",
+	}
+	
+)
+
+func main() {
+	for _, p := range patterns {
+		fmt.Printf("string: %s, ff: %v\n", p, FailureFunction(p))	
+	}
+}
+
 func KMP(s, pattern string) []int {
 	// compute failure function
-	ff := computeFailureFunction(pattern)
+	ff := FailureFunction(pattern)
 
 	// to hold indices of found patterns
 	indices := make([]int, 0, 0)
@@ -41,7 +60,7 @@ func KMP(s, pattern string) []int {
 	return indices
 }
 
-func computeFailureFunction(pattern string) []int {
+func FailureFunction(pattern string) []int {
 
 	// allocate space for failure function
 	n := len(pattern)

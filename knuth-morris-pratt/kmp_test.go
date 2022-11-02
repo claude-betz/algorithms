@@ -25,7 +25,7 @@ var kmpTests = []struct {
 func TestFailureFunction(t *testing.T) {
 	
 	for _, tt := range ffTests {
-		ff := computeFailureFunction(tt.pattern)
+		ff := FailureFunction(tt.pattern)
 		eq := testEquality(tt.output, ff)
 		if eq == false {
 			t.Errorf("expected: %v, got: %v\n", tt.output, ff)
