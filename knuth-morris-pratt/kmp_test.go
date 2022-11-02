@@ -1,7 +1,6 @@
 package main
 
 import(
-	"fmt"
 	"testing"
 )
 
@@ -26,8 +25,6 @@ var kmpTests = []struct {
 func TestFailureFunction(t *testing.T) {
 	
 	for _, tt := range ffTests {
-		fmt.Printf("\npattern: %s\n", tt.pattern)
-
 		ff := computeFailureFunction(tt.pattern)
 		eq := testEquality(tt.output, ff)
 		if eq == false {

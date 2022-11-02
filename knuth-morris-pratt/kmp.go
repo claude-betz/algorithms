@@ -1,18 +1,5 @@
 package main
 
-import(
-	"fmt"
-)
-
-const (
-	s = "aaaba"
-	pattern = "ab"
-)
-
-func main() {
-	fmt.Printf("indices: %v", KMP(s, pattern))
-}
-
 func KMP(s, pattern string) []int {
 	// compute failure function
 	ff := computeFailureFunction(pattern)
@@ -24,8 +11,7 @@ func KMP(s, pattern string) []int {
 	i := 0
 	j := 0
 	for {
-		fmt.Printf("i:%d, j:%d\n", i, j)
-
+		// recognise pattern
 		if j == len(pattern) {
 			indices = append(indices, i-len(pattern)) 
 			j = ff[j-1]
@@ -36,7 +22,7 @@ func KMP(s, pattern string) []int {
 			break
 		}
 	
-		// iterate
+		// evaluate and move pointers
 		if s[i] == pattern[j] {
 			i++
 			j++
@@ -65,9 +51,7 @@ func computeFailureFunction(pattern string) []int {
 	ff[0] = 0
 
 	for s:=1; s<n; s++ {
-		fmt.Printf("s:%d, t:%d\n", s , t)
 		for { 
-			fmt.Printf("val t:%d\n", t)
 			if t>0 && pattern[s] != pattern[t] {
 				t = ff[t-1]
 				continue
@@ -83,7 +67,6 @@ func computeFailureFunction(pattern string) []int {
 		}
 	}
 
-	fmt.Printf("ff computed:\t%v\n", ff)
 	return ff
 }
 
