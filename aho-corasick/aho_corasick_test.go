@@ -30,6 +30,20 @@ var tests = []struct {
 			{0,1,2,3,5,6},
 		},
 	},
+	{
+		[]string{
+			"he",
+			"she",
+			"his",
+			"hers",
+		},
+		[][]int{
+			{0,1,2},
+			{0,3,4,5},
+			{0,1,6,7},
+			{0,1,2,8,9},
+		},
+	},
 }
 
 func TestInsertAndRetrieveWord(t *testing.T) {
