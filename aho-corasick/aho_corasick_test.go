@@ -18,6 +18,18 @@ var tests = []struct {
 			{0,4,5,6},
 		},
 	},
+	{
+		[]string{
+			"car",
+			"cars",
+			"cards",
+		},
+		[][]int{
+			{0,1,2,3},
+			{0,1,2,3,4},
+			{0,1,2,3,5,6},
+		},
+	},
 }
 
 func TestInsertAndRetrieveWord(t *testing.T) {
@@ -25,7 +37,7 @@ func TestInsertAndRetrieveWord(t *testing.T) {
 	for _, test := range tests {
 
 		// Create root node
-		root := NewState(-1) 
+		root := NewState() 
 		
 		for i:=0; i<len(test.patterns); i++ {
 			// insert

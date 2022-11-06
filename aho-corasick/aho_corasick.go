@@ -14,7 +14,13 @@ type State struct {
 	accepts rune
 }
 
-func NewState(accepts rune) *State {
+func NewState() *State {
+	// reset global states
+	id = -1
+	return newState(-1)	
+}
+
+func newState(accepts rune) *State {
 	stateArr := make([]*State, 0)
 	id++
 
@@ -23,7 +29,6 @@ func NewState(accepts rune) *State {
 		states: stateArr,
 		accepts: accepts,
 	}
-
 }
 
 func (s *State) InsertKeyword(kw []rune) {
@@ -46,7 +51,7 @@ func (s *State) InsertKeyword(kw []rune) {
 		// no valid transition for c make new state and insert
 		if (foundValidState == false) {
 			// create new state and append to currStates list of valid states
-			newState := NewState(r)
+			newState := newState(r)
 			currState.states = append(currState.states, newState)
 			currState = newState
 		}
@@ -85,7 +90,7 @@ func (s *State) ToString() string {
 func main() {
 	fmt.Println("Aho Corasick Algorithm")
 	
-	root := NewState(-1)
+	root := NewState()
 
 	root.InsertKeyword([]rune("car"))
 	root.InsertKeyword([]rune("tim"))
