@@ -46,6 +46,7 @@ var tests = []struct {
 	},
 }
 
+
 func TestInsertAndRetrieveWord(t *testing.T) {
 	
 	for _, test := range tests {

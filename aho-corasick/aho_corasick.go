@@ -6,6 +6,7 @@ import(
 
 var (
 	id int = -1
+	statesMap = make(map[int]*State, 0)
 )
 
 type State struct {
@@ -24,11 +25,33 @@ func newState(accepts rune) *State {
 	stateArr := make([]*State, 0)
 	id++
 
-	return &State{
+	s := &State{
 		id: id,
 		states: stateArr,
 		accepts: accepts,
 	}
+
+	// append to stateMapo
+	statesMap[id] = s
+
+	return s
+}
+
+func GoTo(state int, char rune) int {
+	// we should add a loop on state 0
+	if state == 0 {
+		return 0
+	}
+
+	s := statesMap[state]
+	for _, s := range s.states {
+		if s.isValidTransition(char) {
+			return s.id
+		} 
+	} 
+
+	// fail - we can formalise this later
+	return -1
 }
 
 func (s *State) InsertKeyword(kw []rune) {
@@ -99,4 +122,10 @@ func main() {
 	fmt.Printf("transitions: %v\n", root.GetKeywordStates([]rune("car")))
 	fmt.Printf("transitions: %v\n", root.GetKeywordStates([]rune("tim")))
 	fmt.Printf("transitions: %v\n", root.GetKeywordStates([]rune("cards")))
+
+	// goto
+	state := 2
+	char := 'r'
+	fmt.Printf("state: %d, char: %s, nextState: %d", state, string(char), GoTo(state, char))
+
 }
