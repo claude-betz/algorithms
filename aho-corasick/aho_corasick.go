@@ -7,6 +7,7 @@ import(
 var (
 	id int = -1
 	statesMap = make(map[int]*State, 0)
+	outputMap = make(map[int][]string, 0)
 )
 
 type State struct {
@@ -79,6 +80,9 @@ func (s *State) InsertKeyword(kw []rune) {
 			currState = newState
 		}
 	}
+
+	// add word to output
+	outputMap[currState.id] = append(outputMap[currState.id], string(kw))
 }
 
 func (s *State) GetKeywordStates(kw []rune) []int {
@@ -126,6 +130,10 @@ func main() {
 	// goto
 	state := 2
 	char := 'r'
-	fmt.Printf("state: %d, char: %s, nextState: %d", state, string(char), GoTo(state, char))
+	fmt.Printf("state: %d, char: %s, nextState: %d\n", state, string(char), GoTo(state, char))
 
+	// output
+	for key, elem := range outputMap {
+		fmt.Printf("key: %d, elements: %v\n", key, elem)
+	}
 }
