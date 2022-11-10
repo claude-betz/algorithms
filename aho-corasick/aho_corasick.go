@@ -8,6 +8,7 @@ var (
 	id int = -1
 	statesMap = make(map[int]*State, 0)
 	outputMap = make(map[int][]string, 0)
+	failureMap = make(map[int]int, 0)
 )
 
 type State struct {
@@ -38,18 +39,49 @@ func newState(accepts rune) *State {
 	return s
 }
 
+func AhoCorasick(keywords []string, text string) {
+
+	// build trie
+	root := NewState()
+
+	for _, kw := range keywords {
+		root.InsertKeyword([]rune(kw))	
+	}
+
+	// build failure function
+	root.BuildFailureFunction()
+
+	// iterate over text
+	state := 0
+	for i, c := range []rune(text) {
+		for {
+			if GoTo(state, c) != -1 {
+				break
+			}
+
+			state = failureMap[state]
+		}			
+		state = GoTo(state, c)
+
+		if len(outputMap[state]) != 0 {
+			fmt.Printf("i: %d\n", i)
+			fmt.Printf("output: %v", outputMap[state])
+		}  
+	}
+}
+
 func GoTo(state int, char rune) int {
+	s := statesMap[state]
+	for _, state := range s.states {
+		if state.isValidTransition(char) {
+			return state.id
+		} 
+	} 
+
 	// we should add a loop on state 0
 	if state == 0 {
 		return 0
 	}
-
-	s := statesMap[state]
-	for _, s := range s.states {
-		if s.isValidTransition(char) {
-			return s.id
-		} 
-	} 
 
 	// fail - we can formalise this later
 	return -1
@@ -105,6 +137,65 @@ func (s *State) GetKeywordStates(kw []rune) []int {
 	return arr
 }
 
+func (s *State) BuildFailureFunction() {
+	fmt.Println("outputmap: %v", outputMap)
+
+	queue := make([]*State, 0)
+
+	// initialise with d=1
+	for _, s1 := range s.states {
+		failureMap[s1.id] = 0
+		queue = append(queue, s1)
+		fmt.Printf("id: %d, s: %s\n", s1.id, string(s1.accepts))
+	}
+
+	fmt.Printf("queue: %v\n", queue)
+
+	for {
+		// terminate
+		if len(queue) == 0 {
+			break
+		}
+
+		// get first element, and pop from queue
+		r := queue[0]
+		queue = queue[1:]
+
+		fmt.Printf("queue: %v\n", queue)
+
+
+		// iterate though valid transitions for r
+		for _, ss := range r.states {
+			
+			a := ss.accepts
+
+			// append to queue
+			queue = append(queue, ss)
+			state := failureMap[r.id]
+
+			
+			fmt.Printf("a: %s\n", string(a))
+			fmt.Printf("r: %d\n", r.id)
+			fmt.Printf("s: %d\n", ss.id)
+			fmt.Printf("state: %d, a: %s, goto: %d\n", state, string(a), GoTo(state, a))
+
+			for {
+				if GoTo(state, a) != -1 {
+					break
+				}  
+
+				state = failureMap[state] 
+			}
+
+			failureMap[ss.id] = GoTo(state, a)
+			outputMap[ss.id] = append(outputMap[ss.id], outputMap[failureMap[ss.id]]...)
+		}
+	}
+
+	fmt.Println("failureMap: %v", failureMap)
+	fmt.Println("outputmap: %v", outputMap)
+}
+
 
 func (s *State) isValidTransition(r rune) bool {
 	return s.accepts == r
@@ -117,23 +208,34 @@ func (s *State) ToString() string {
 func main() {
 	fmt.Println("Aho Corasick Algorithm")
 	
-	root := NewState()
+	//root := NewState()
 
-	root.InsertKeyword([]rune("car"))
-	root.InsertKeyword([]rune("tim"))
-	root.InsertKeyword([]rune("cards"))
+//root.InsertKeyword([]rune("he"))
+//root.InsertKeyword([]rune("she"))
+//root.InsertKeyword([]rune("his"))
+//root.InsertKeyword([]rune("hers"))
+//
+//fmt.Printf("transitions: %v\n", root.GetKeywordStates([]rune("he")))
+//fmt.Printf("transitions: %v\n", root.GetKeywordStates([]rune("she")))
+//fmt.Printf("transitions: %v\n", root.GetKeywordStates([]rune("his")))
+//fmt.Printf("transitions: %v\n", root.GetKeywordStates([]rune("hers")))
+//
+//
+//// goto
+//state := 0
+//char := 'h'
+//fmt.Printf("state: %d, char: %s, nextState: %d\n", state, string(char), GoTo(state, char))
+//
+//// output
+//for key, elem := range outputMap {
+//	fmt.Printf("key: %d, elements: %v\n", key, elem)
+//}
+//
+//root.BuildFailureFunction()
+	
+	arr := []string{"he","she", "his", "hers"}
+	text := "ushers"
 
-	fmt.Printf("transitions: %v\n", root.GetKeywordStates([]rune("car")))
-	fmt.Printf("transitions: %v\n", root.GetKeywordStates([]rune("tim")))
-	fmt.Printf("transitions: %v\n", root.GetKeywordStates([]rune("cards")))
+	AhoCorasick(arr, text)
 
-	// goto
-	state := 2
-	char := 'r'
-	fmt.Printf("state: %d, char: %s, nextState: %d\n", state, string(char), GoTo(state, char))
-
-	// output
-	for key, elem := range outputMap {
-		fmt.Printf("key: %d, elements: %v\n", key, elem)
-	}
 }
