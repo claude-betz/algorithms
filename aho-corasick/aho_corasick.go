@@ -40,6 +40,8 @@ func newState(accepts rune) *State {
 }
 
 func AhoCorasick(keywords []string, text string) {
+	fmt.Printf("patterns: %v\n", keywords)
+	fmt.Printf("text: %s\n", text)
 
 	// build trie
 	root := NewState()
@@ -64,8 +66,7 @@ func AhoCorasick(keywords []string, text string) {
 		state = GoTo(state, c)
 
 		if len(outputMap[state]) != 0 {
-			fmt.Printf("i: %d\n", i)
-			fmt.Printf("output: %v", outputMap[state])
+			fmt.Printf("i: %d, output: %v\n", i, outputMap[state])
 		}  
 	}
 }
@@ -100,7 +101,6 @@ func (s *State) InsertKeyword(kw []rune) {
 			if state.isValidTransition(r) {
 				currState = state	
 				foundValidState = true
-				fmt.Printf("%s\n", state.ToString())		
 				break
 			}
 		}
@@ -138,7 +138,6 @@ func (s *State) GetKeywordStates(kw []rune) []int {
 }
 
 func (s *State) BuildFailureFunction() {
-	fmt.Println("outputmap: %v", outputMap)
 
 	queue := make([]*State, 0)
 
@@ -146,10 +145,7 @@ func (s *State) BuildFailureFunction() {
 	for _, s1 := range s.states {
 		failureMap[s1.id] = 0
 		queue = append(queue, s1)
-		fmt.Printf("id: %d, s: %s\n", s1.id, string(s1.accepts))
 	}
-
-	fmt.Printf("queue: %v\n", queue)
 
 	for {
 		// terminate
@@ -161,9 +157,6 @@ func (s *State) BuildFailureFunction() {
 		r := queue[0]
 		queue = queue[1:]
 
-		fmt.Printf("queue: %v\n", queue)
-
-
 		// iterate though valid transitions for r
 		for _, ss := range r.states {
 			
@@ -172,12 +165,6 @@ func (s *State) BuildFailureFunction() {
 			// append to queue
 			queue = append(queue, ss)
 			state := failureMap[r.id]
-
-			
-			fmt.Printf("a: %s\n", string(a))
-			fmt.Printf("r: %d\n", r.id)
-			fmt.Printf("s: %d\n", ss.id)
-			fmt.Printf("state: %d, a: %s, goto: %d\n", state, string(a), GoTo(state, a))
 
 			for {
 				if GoTo(state, a) != -1 {
@@ -191,9 +178,6 @@ func (s *State) BuildFailureFunction() {
 			outputMap[ss.id] = append(outputMap[ss.id], outputMap[failureMap[ss.id]]...)
 		}
 	}
-
-	fmt.Println("failureMap: %v", failureMap)
-	fmt.Println("outputmap: %v", outputMap)
 }
 
 
@@ -208,34 +192,8 @@ func (s *State) ToString() string {
 func main() {
 	fmt.Println("Aho Corasick Algorithm")
 	
-	//root := NewState()
-
-//root.InsertKeyword([]rune("he"))
-//root.InsertKeyword([]rune("she"))
-//root.InsertKeyword([]rune("his"))
-//root.InsertKeyword([]rune("hers"))
-//
-//fmt.Printf("transitions: %v\n", root.GetKeywordStates([]rune("he")))
-//fmt.Printf("transitions: %v\n", root.GetKeywordStates([]rune("she")))
-//fmt.Printf("transitions: %v\n", root.GetKeywordStates([]rune("his")))
-//fmt.Printf("transitions: %v\n", root.GetKeywordStates([]rune("hers")))
-//
-//
-//// goto
-//state := 0
-//char := 'h'
-//fmt.Printf("state: %d, char: %s, nextState: %d\n", state, string(char), GoTo(state, char))
-//
-//// output
-//for key, elem := range outputMap {
-//	fmt.Printf("key: %d, elements: %v\n", key, elem)
-//}
-//
-//root.BuildFailureFunction()
-	
 	arr := []string{"he","she", "his", "hers"}
 	text := "ushers"
 
 	AhoCorasick(arr, text)
-
 }
