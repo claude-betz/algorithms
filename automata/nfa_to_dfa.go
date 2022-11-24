@@ -57,10 +57,11 @@ func (g *Graph) AddEdge(src, dst Node, accepts rune) {
 	}
 }
 
-func (g *Graph) RecursiveBFS(n []Node) {
+func (g *Graph) RecursiveBFS(res *[]Node, n []Node) {
 	// print everything in array
 	for _, node := range n {
 		fmt.Printf("%d ", node)
+		*res = append(*res, node)
 	}
 	fmt.Println()
 
@@ -74,12 +75,14 @@ func (g *Graph) RecursiveBFS(n []Node) {
 		}
 		
 		if len(nodeArr) != 0 {
-			g.RecursiveBFS(nodeArr)
+			g.RecursiveBFS(res, nodeArr)
 		}
 	}
 }
 
-func (g *Graph) IterativeBFS(n Node) {
+func (g *Graph) IterativeBFS(n Node) []Node {
+	var res []Node
+
 	// queue for BFS
 	var queue []Node
 	
@@ -100,8 +103,8 @@ func (g *Graph) IterativeBFS(n Node) {
 		// pop
 		queue = queue[1:] 
 
-		// print
-		fmt.Printf("%d ", v)
+		// append to res
+		res = append(res, v)
 
 		for _, edge := range g.adjList[v] {
 
@@ -113,6 +116,7 @@ func (g *Graph) IterativeBFS(n Node) {
 			}
 		}
 	}
+	return res
 }
 
 func (g *Graph) Print() {
@@ -128,27 +132,8 @@ func (g *Graph) Print() {
 	} 
 }
 
-
 func main() {
-	g := NewGraph()	
-	
-	// connect n0 and n1 accepting 'a'
-	g.AddEdge(0, 1, eps)
-	g.AddEdge(1, 2, 'a')
-	g.AddEdge(0, 3, eps)
-	g.AddEdge(3, 4, 'b')
 
-	// print
-	g.Print()
-
-	// BFS
-	nodeArr := []Node{0}
-	fmt.Println("Recursive BFS")
-
-	g.RecursiveBFS(nodeArr)
-
-	fmt.Println("Iterative BFS")
-	g.IterativeBFS(0)
 }
 
 
