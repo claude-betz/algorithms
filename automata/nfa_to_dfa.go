@@ -15,14 +15,34 @@ const (
 	any = -2
 )
 
-
 // graph
 type Graph struct {
 	nodes map[Node]bool
 	adjList map[Node][]*Edge
 }
 
-type Node int 
+type Node interface{
+	Id() int
+} 
+
+type NFAState struct {
+	id int
+}
+
+func (n NFAState) Id() int {
+	return n.id
+}
+
+type DFAState struct {
+	id int
+	// idea index is to concatenate ordered nfaStates for an efficient lookup
+	index string
+	nfaStates []Node
+}
+
+func (n DFAState) Id() int {
+	return n.id
+}
 
 type Edge struct {
 	src, dst Node
@@ -57,11 +77,11 @@ func (g *Graph) AddEdge(src, dst Node, accepts rune) {
 	}
 }
 
-func (g *Graph) RecursiveBFS(res *[]Node, n []Node) {
+func (g *Graph) RecursiveBFS(res *[]int, n []Node) {
 	// print everything in array
 	for _, node := range n {
-		fmt.Printf("%d ", node)
-		*res = append(*res, node)
+		fmt.Printf("%d ", node.Id())
+		*res = append(*res, node.Id())
 	}
 	fmt.Println()
 
@@ -80,14 +100,14 @@ func (g *Graph) RecursiveBFS(res *[]Node, n []Node) {
 	}
 }
 
-func (g *Graph) IterativeBFS(n Node) []Node {
-	var res []Node
+func (g *Graph) IterativeBFS(n Node) []int {
+	var res []int
 
 	// queue for BFS
 	var queue []Node
 	
 	// visited array: default false
-	var visited []bool = make([]bool, len(g.nodes))
+	var visited = make(map[Node]bool, len(g.nodes))
 
 	// queue start
 	queue = append(queue, n)
@@ -104,7 +124,7 @@ func (g *Graph) IterativeBFS(n Node) []Node {
 		queue = queue[1:] 
 
 		// append to res
-		res = append(res, v)
+		res = append(res, v.Id())
 
 		for _, edge := range g.adjList[v] {
 

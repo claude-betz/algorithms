@@ -12,16 +12,16 @@ import (
 
 var testCases = []struct {
 	edges []Edge
-	output []Node
+	output []int
 }{
 	{
 		[]Edge{
-			Edge{0, 1, eps},
-			Edge{1, 2, 'a'},
-			Edge{0, 3, eps},
-			Edge{3, 4, 'b'},
+			Edge{NFAState{0}, NFAState{1}, eps},
+			Edge{NFAState{1}, NFAState{2}, 'a'},
+			Edge{NFAState{0}, NFAState{3}, eps},
+			Edge{NFAState{3}, NFAState{4}, 'b'},
 		},
-		[]Node{0, 1, 3, 2, 4},
+		[]int{0, 1, 3, 2, 4},
 	},
 }
 
@@ -31,11 +31,11 @@ func TestBFS(t *testing.T) {
 		g := buildGraph(tc.edges)
 
 		// perform iterative BFS from start=0
-		itrBFS := g.IterativeBFS(0)
+		itrBFS := g.IterativeBFS(NFAState{0})
 		
 		// perform recursive BFS from start=0
-		var recBFS []Node
-		g.RecursiveBFS(&recBFS, []Node{0})
+		var recBFS []int
+		g.RecursiveBFS(&recBFS, []Node{NFAState{0}})
 		
 		// check equality of iterative and recursive BFS
 		eq := checkEquality(itrBFS, recBFS) 
@@ -59,7 +59,7 @@ func buildGraph(edges []Edge) *Graph {
 	return g
 }
 
-func checkEquality(arr1, arr2 []Node) bool {
+func checkEquality(arr1, arr2 []int) bool {
 	if len(arr1) != len(arr2) {
 		return false
 	}
@@ -70,5 +70,6 @@ func checkEquality(arr1, arr2 []Node) bool {
 		}
 	}
 	return true
+
 }
 
