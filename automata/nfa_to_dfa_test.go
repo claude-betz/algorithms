@@ -12,7 +12,8 @@ import (
 
 var testCases = []struct {
 	edges []Edge
-	output []int
+	outputBFS []int
+	outputEps []int
 }{
 	{
 		[]Edge{
@@ -22,12 +23,13 @@ var testCases = []struct {
 			Edge{NFAState{3}, NFAState{4}, 'b'},
 		},
 		[]int{0, 1, 3, 2, 4},
+		[]int{0, 1, 3},
 	},
 }
 
 func TestBFS(t *testing.T) {
 	for _, tc := range testCases {
-		// build Graph
+		// build graph
 		g := buildGraph(tc.edges)
 
 		// perform iterative BFS from start=0
@@ -39,15 +41,30 @@ func TestBFS(t *testing.T) {
 		
 		// check equality of iterative and recursive BFS
 		eq := checkEquality(itrBFS, recBFS) 
-		if eq == false {
-			t.Errorf("itrBFS: %v not equal recBFS: %v", itrBFS, recBFS)
+		if !eq {
+			t.Errorf("itrBFS: %v recBFS: %v", itrBFS, recBFS)
 		}
 
 		// check equality of one of the arrays to expected
-		correct := checkEquality(itrBFS, tc.output)	
-		if correct == false {
-			t.Errorf("itrBFS: %v not equal to expected output: %v", itrBFS, tc.output)
+		eq = checkEquality(itrBFS, tc.outputBFS)	
+		if !eq {
+			t.Errorf("itrBFS: %v expected: %v", itrBFS, tc.outputBFS)
 		}
+	}
+}
+
+func TestEpsClosure(t *testing.T) {
+	for _, tc := range testCases {
+		// build graph
+		g := buildGraph(tc.edges)
+
+		// get eps closure
+		epsClosure := g.EpsilonClosure([]Node{NFAState{0}})
+
+		eq := checkEquality(epsClosure, tc.outputEps)
+		if !eq {
+			t.Errorf("epsClosure: %v expected: %v", epsClosure, tc.outputEps)	
+		} 
 	}
 }
 
@@ -70,6 +87,5 @@ func checkEquality(arr1, arr2 []int) bool {
 		}
 	}
 	return true
-
 }
 

@@ -7,6 +7,7 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 )
 
@@ -137,6 +138,55 @@ func (g *Graph) IterativeBFS(n Node) []int {
 		}
 	}
 	return res
+}
+
+func (g *Graph) EpsilonClosure(T []Node) []int {
+	// initialise epsilon closure
+	var epsClosure []int
+
+	// use stack
+	stack := make([]Node, 0)
+
+	// push all states of T onto stack
+	for _, state := range T {
+		epsClosure = append(epsClosure, state.Id())
+		stack = append(stack, state)
+	}
+
+	// while stack is not empty
+	for {
+		if len(stack) == 0 {
+			break
+		}
+
+		// deque t (last item)
+		t := stack[len(stack)-1]
+		// pop t
+		stack = stack[:len(stack)-1]
+
+		// iterate all states u with edge from t to u
+		for _, edge := range g.adjList[t] {
+			// only epsilon edges
+			if edge.accepts == eps{
+				u := edge.dst		
+
+				// add to eps closure
+				epsClosure = append(epsClosure, u.Id())
+
+				// push to stack
+				stack = append(stack, u)
+			}
+		}
+	}
+	return epsClosure
+}
+
+func computeTIndex(T []Node) string {
+	var tIndex bytes.Buffer
+	for _, n := range T {
+		tIndex.WriteString(fmt.Sprintf("%d",n.Id()))
+	}
+	return tIndex.String()
 }
 
 func (g *Graph) Print() {
