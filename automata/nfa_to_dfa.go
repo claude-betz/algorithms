@@ -10,12 +10,18 @@ import (
 	"fmt"
 )
 
+const (
+	eps = -1
+	any = -2
+)
+
+
 // graph
 type Graph struct {
 	nodeCount, edgeCount int
 	nodes []*Node
 	edges []*Edge	
-	mapping map[Node][]*Edge
+	mapping map[*Node][]*Edge
 }
 
 type Node struct {
@@ -33,7 +39,7 @@ func NewGraph() *Graph {
 		edgeCount: 0,
 		nodes: make([]*Node, 0),
 		edges: make([]*Edge, 0),
-		mapping: make(map[Node][]*Edge),
+		mapping: make(map[*Node][]*Edge),
 	}
 }
 
@@ -57,7 +63,71 @@ func (g *Graph) AddEdge(src, dst *Node, accepts rune) {
 
 	g.edges = append(g.edges, e)
 
-	g.mapping[*src] = append(g.mapping[*src], e) 
+	// add edge to mapping for node
+	g.mapping[src] = append(g.mapping[src], e) 
+}
+
+func (g *Graph) RecursiveBFS(n []*Node) {
+	// print everything in array
+	for _, node := range n {
+		fmt.Printf("%d ", node.id)
+	}
+	fmt.Println()
+
+	// print everything in array
+	for _, node := range n {
+
+		// add all children to array
+		var nodeArr []*Node 
+
+		for _, edge := range g.mapping[node] {
+			nodeArr = append(nodeArr, edge.dst)
+		}
+		
+		if len(nodeArr) != 0 {
+			g.RecursiveBFS(nodeArr)
+		}
+	}
+}
+
+func (g *Graph) IterativeBFS(n *Node) {
+	// queue for BFS
+	var queue []*Node
+	
+	// visited array
+	var visited map[*Node]bool = make(map[*Node]bool, 0)
+	
+	// initialise visited map
+	for _, node := range g.nodes {
+		visited[node] = false
+	}
+
+	// queue start
+	queue = append(queue, n)
+	visited[n] = true
+
+	for {
+		if len(queue) == 0 {
+			break
+		}
+
+		// deque front node
+		v := queue[0]
+		// pop
+		queue = queue[1:] 
+
+		// print
+		fmt.Printf("%d ", v.id)
+
+		for _, edge := range g.mapping[v] {
+			// if not visited add to queue
+			node := edge.dst
+			if visited[node] == false {
+				visited[node] = true
+				queue = append(queue, node)
+			}
+		}
+	}
 }
 
 func (g *Graph) Print() {
@@ -65,10 +135,10 @@ func (g *Graph) Print() {
 
 	// for each node
 	for _, n := range g.nodes {
-		fmt.Printf("[%d]", n.id)
+		fmt.Printf("[%d]:", n.id)
 
-		for _, e := range g.mapping[*n] {
-			fmt.Printf(" --%s--> [%d]", string(e.accepts), e.dst.id)
+		for _, e := range g.mapping[n] {
+			fmt.Printf(" Move[%d, %s] = %d", n.id, string(e.accepts), e.dst.id)
 		}
 
 		fmt.Println()
@@ -77,7 +147,6 @@ func (g *Graph) Print() {
 
 
 func main() {
-	// create graph
 	g := NewGraph()	
 
 	// create nodes
@@ -95,14 +164,23 @@ func main() {
 	g.AddNode(n4)
 
 	// connect n0 and n1 accepting 'a'
-	g.AddEdge(n0, n1, -1)
+	g.AddEdge(n0, n1, eps)
 	g.AddEdge(n1, n2, 'a')
-	g.AddEdge(n2, n2, 'a')
-	g.AddEdge(n0, n3, -1)
+	//g.AddEdge(n2, n2, 'a')
+	g.AddEdge(n0, n3, eps)
 	g.AddEdge(n3, n4, 'b')
-	g.AddEdge(n4, n4, 'b')
+	//g.AddEdge(n4, n4, 'b')
 
 	// print
 	g.Print()
+
+	// BFS
+	nodeArr := []*Node{n0}
+	fmt.Println("Recursive BFS")
+
+	g.RecursiveBFS(nodeArr)
+
+	fmt.Println("Iterative BFS")
+	g.IterativeBFS(n0)
 }
 
