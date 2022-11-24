@@ -18,69 +18,58 @@ const (
 
 // graph
 type Graph struct {
-	nodeCount, edgeCount int
-	nodes []*Node
-	edges []*Edge	
-	mapping map[*Node][]*Edge
+	nodes map[Node]bool
+	adjList map[Node][]*Edge
 }
 
-type Node struct {
-	id int
-} 
+type Node int 
 
 type Edge struct {
-	src, dst *Node
+	src, dst Node
 	accepts rune
 }
 
 func NewGraph() *Graph {
 	return &Graph{
-		nodeCount: 0,
-		edgeCount: 0,
-		nodes: make([]*Node, 0),
-		edges: make([]*Edge, 0),
-		mapping: make(map[*Node][]*Edge),
+		nodes: make(map[Node]bool),
+		adjList: make(map[Node][]*Edge),
 	}
 }
 
-func (g *Graph) AddNode(n *Node) {
-	// increment node count
-	g.nodeCount++
+func (g *Graph) AddEdge(src, dst Node, accepts rune) {	
+	// add nodes
+	g.nodes[src] = true
+	g.nodes[dst] = true
 
-	g.nodes = append(g.nodes, n)
-}
-
-func (g *Graph) AddEdge(src, dst *Node, accepts rune) {
-	// increment edge count
-	g.edgeCount++
-
-	// create edge
+	// add edge
 	e := &Edge{
 		src: src,
 		dst: dst,
 		accepts: accepts,
 	}
 
-	g.edges = append(g.edges, e)
+	_, ok := g.adjList[e.src]  
 
-	// add edge to mapping for node
-	g.mapping[src] = append(g.mapping[src], e) 
+	if !ok {
+		g.adjList[e.src] = []*Edge{e}
+	} else {  
+		g.adjList[e.src] = append(g.adjList[e.src], e)
+	}
 }
 
-func (g *Graph) RecursiveBFS(n []*Node) {
+func (g *Graph) RecursiveBFS(n []Node) {
 	// print everything in array
 	for _, node := range n {
-		fmt.Printf("%d ", node.id)
+		fmt.Printf("%d ", node)
 	}
 	fmt.Println()
 
-	// print everything in array
+	// recurse 
 	for _, node := range n {
-
 		// add all children to array
-		var nodeArr []*Node 
+		var nodeArr []Node 
 
-		for _, edge := range g.mapping[node] {
+		for _, edge := range g.adjList[node] {
 			nodeArr = append(nodeArr, edge.dst)
 		}
 		
@@ -90,17 +79,12 @@ func (g *Graph) RecursiveBFS(n []*Node) {
 	}
 }
 
-func (g *Graph) IterativeBFS(n *Node) {
+func (g *Graph) IterativeBFS(n Node) {
 	// queue for BFS
-	var queue []*Node
+	var queue []Node
 	
-	// visited array
-	var visited map[*Node]bool = make(map[*Node]bool, 0)
-	
-	// initialise visited map
-	for _, node := range g.nodes {
-		visited[node] = false
-	}
+	// visited array: default false
+	var visited []bool = make([]bool, len(g.nodes))
 
 	// queue start
 	queue = append(queue, n)
@@ -117,28 +101,27 @@ func (g *Graph) IterativeBFS(n *Node) {
 		queue = queue[1:] 
 
 		// print
-		fmt.Printf("%d ", v.id)
+		fmt.Printf("%d ", v)
 
-		for _, edge := range g.mapping[v] {
+		for _, edge := range g.adjList[v] {
+
 			// if not visited add to queue
-			node := edge.dst
-			if visited[node] == false {
-				visited[node] = true
-				queue = append(queue, node)
+			dst := edge.dst
+			if !visited[dst] {
+				visited[dst] = true
+				queue = append(queue, dst)
 			}
 		}
 	}
 }
 
 func (g *Graph) Print() {
-	fmt.Printf("nodeCount: %d, edgeCount: %d\n", g.nodeCount, g.edgeCount)
-
 	// for each node
-	for _, n := range g.nodes {
-		fmt.Printf("[%d]:", n.id)
+	for n := range g.adjList {
+		fmt.Printf("[%d]:", n)
 
-		for _, e := range g.mapping[n] {
-			fmt.Printf(" Move[%d, %s] = %d", n.id, string(e.accepts), e.dst.id)
+		for _, e := range g.adjList[n] {
+			fmt.Printf(" Move[%d, %s] = %d", n, string(e.accepts), e.dst)
 		}
 
 		fmt.Println()
@@ -148,39 +131,24 @@ func (g *Graph) Print() {
 
 func main() {
 	g := NewGraph()	
-
-	// create nodes
-	n0 := &Node{id: 0}
-	n1 := &Node{id: 1}
-	n2 := &Node{id: 2}
-	n3 := &Node{id: 3}
-	n4 := &Node{id: 4}
-
-	// add node
-	g.AddNode(n0)
-	g.AddNode(n1)
-	g.AddNode(n2)
-	g.AddNode(n3)
-	g.AddNode(n4)
-
+	
 	// connect n0 and n1 accepting 'a'
-	g.AddEdge(n0, n1, eps)
-	g.AddEdge(n1, n2, 'a')
-	//g.AddEdge(n2, n2, 'a')
-	g.AddEdge(n0, n3, eps)
-	g.AddEdge(n3, n4, 'b')
-	//g.AddEdge(n4, n4, 'b')
+	g.AddEdge(0, 1, eps)
+	g.AddEdge(1, 2, 'a')
+	g.AddEdge(0, 3, eps)
+	g.AddEdge(3, 4, 'b')
 
 	// print
 	g.Print()
 
 	// BFS
-	nodeArr := []*Node{n0}
+	nodeArr := []Node{0}
 	fmt.Println("Recursive BFS")
 
 	g.RecursiveBFS(nodeArr)
 
 	fmt.Println("Iterative BFS")
-	g.IterativeBFS(n0)
+	g.IterativeBFS(0)
 }
+
 
