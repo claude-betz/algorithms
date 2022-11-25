@@ -8,6 +8,7 @@ package main
 
 import (
 	"testing"
+	"fmt"
 )
 
 var testCases = []struct {
@@ -85,6 +86,23 @@ func TestMove(t *testing.T) {
 		}
 	}
 }
+
+func TestNFAToDFA(t *testing.T) {
+	for _, tc := range testCases {
+		// build nfa
+		nfa := buildGraph(tc.edges)
+
+		// convert nfa to dfa
+		dfa := SubsetConstruction(nfa)
+
+		// print for now
+		fmt.Println("nfa")
+		nfa.Print()
+
+		fmt.Println("dfa")
+		dfa.Print()
+	}
+} 
 
 func buildGraph(edges []Edge) *Graph {
 	g := NewGraph()

@@ -22,7 +22,7 @@ var (
 // graph
 type Graph struct {
 	nodes map[int]Node
-	adjList map[Node][]*Edge
+	adjList map[int][]*Edge
 }
 
 type Node interface{
@@ -56,7 +56,7 @@ type Edge struct {
 func NewGraph() *Graph {
 	return &Graph{
 		nodes: make(map[int]Node),
-		adjList: make(map[Node][]*Edge),
+		adjList: make(map[int][]*Edge),
 	}
 }
 
@@ -72,12 +72,12 @@ func (g *Graph) AddEdge(src, dst Node, accepts rune) {
 		accepts: accepts,
 	}
 
-	_, ok := g.adjList[e.src]  
+	_, ok := g.adjList[e.src.Id()]  
 
 	if !ok {
-		g.adjList[e.src] = []*Edge{e}
+		g.adjList[e.src.Id()] = []*Edge{e}
 	} else {  
-		g.adjList[e.src] = append(g.adjList[e.src], e)
+		g.adjList[e.src.Id()] = append(g.adjList[e.src.Id()], e)
 	}
 }
 
@@ -93,7 +93,7 @@ func (g *Graph) RecursiveBFS(res *[]Node, n []Node) {
 		// add all children to array
 		var nodeArr []Node 
 
-		for _, edge := range g.adjList[node] {
+		for _, edge := range g.adjList[node.Id()] {
 			nodeArr = append(nodeArr, edge.dst)
 		}
 		
@@ -129,7 +129,7 @@ func (g *Graph) IterativeBFS(n Node) []Node {
 		// append to res
 		res = append(res, v)
 
-		for _, edge := range g.adjList[v] {
+		for _, edge := range g.adjList[v.Id()] {
 
 			// if not visited add to queue
 			dst := edge.dst
@@ -167,7 +167,7 @@ func (g *Graph) EpsilonClosure(T []Node) []Node {
 		stack = stack[:len(stack)-1]
 
 		// iterate all states u with edge from t to u
-		for _, edge := range g.adjList[t] {
+		for _, edge := range g.adjList[t.Id()] {
 			// only epsilon edges
 			if edge.accepts == eps{
 				u := edge.dst		
@@ -197,7 +197,7 @@ func (g *Graph) Move(T []Node, c rune) []Node {
 	// for each of the nodes in T
 	for _, node := range T {
 		// edges leaving this node
-		edges := g.adjList[node]
+		edges := g.adjList[node.Id()]
 
 		for _, edge := range edges {
 			// check for edge that accepts c
@@ -214,7 +214,7 @@ func SubsetConstruction(nfa *Graph) *Graph {
 	var dStates []DFAState
 		
 	// map
-	var markMap map[string]bool
+	var markMap = make(map[string]bool, 0)
 
 	count := 0
 	dfa := NewGraph()
@@ -255,9 +255,10 @@ func SubsetConstruction(nfa *Graph) *Graph {
 
 			// U not in DStates add as unmarked
 			index = computeTIndex(U)
+
 			if !markMap[index] {
 				// increment id count
-				count++
+				count = count +1
 				
 				// create dfaState
 				dfaState := DFAState{
@@ -267,11 +268,8 @@ func SubsetConstruction(nfa *Graph) *Graph {
 				}
 
 				// add to dStates
-				dStates = append(dStates, state)
+				dStates = append(dStates, dfaState)
 				
-				// add to markMap
-				markMap[index] = false
-
 				// add E(T,U,c) to dfaGraph
 				dfa.AddEdge(T, dfaState, c)
 			}
@@ -279,6 +277,8 @@ func SubsetConstruction(nfa *Graph) *Graph {
 
 		// pop off T
 		dStates = dStates[1:]	
+
+		break
 	}
 
 	return dfa
@@ -290,7 +290,7 @@ func (g *Graph) Print() {
 		fmt.Printf("[%d]:", n)
 
 		for _, e := range g.adjList[n] {
-			fmt.Printf(" Move[%d, %s] = %d", n, string(e.accepts), e.dst)
+			fmt.Printf(" Move[%d, %s] = %d", n, string(e.accepts), e.dst.Id())
 		}
 
 		fmt.Println()
@@ -298,7 +298,7 @@ func (g *Graph) Print() {
 }
 
 func main() {
-
+	
 }
 
 
