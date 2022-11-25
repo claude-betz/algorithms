@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	eps = -1
+	eps = 'ε'
 )
 
 var (
