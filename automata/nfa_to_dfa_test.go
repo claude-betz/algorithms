@@ -14,6 +14,7 @@ var testCases = []struct {
 	edges []Edge
 	outputBFS []int
 	outputEps []int
+	outputMove []int
 }{
 	{
 		[]Edge{
@@ -24,6 +25,7 @@ var testCases = []struct {
 		},
 		[]int{0, 1, 3, 2, 4},
 		[]int{0, 1, 3},
+		[]int{1, 3},
 	},
 }
 
@@ -36,16 +38,16 @@ func TestBFS(t *testing.T) {
 		itrBFS := g.IterativeBFS(NFAState{0})
 		
 		// perform recursive BFS from start=0
-		var recBFS []int
+		var recBFS []Node
 		g.RecursiveBFS(&recBFS, []Node{NFAState{0}})
 		
-		// check equality of iterative and recursive BFS
-		eq := checkEquality(itrBFS, recBFS) 
+		// check equality of recursive BFS to expected
+		eq := checkEquality(recBFS, tc.outputBFS) 
 		if !eq {
-			t.Errorf("itrBFS: %v recBFS: %v", itrBFS, recBFS)
+			t.Errorf("recBFS: %v expected: %v", recBFS, tc.outputBFS)
 		}
 
-		// check equality of one of the arrays to expected
+		// check equality of iterative BFS to expected
 		eq = checkEquality(itrBFS, tc.outputBFS)	
 		if !eq {
 			t.Errorf("itrBFS: %v expected: %v", itrBFS, tc.outputBFS)
@@ -68,6 +70,22 @@ func TestEpsClosure(t *testing.T) {
 	}
 }
 
+func TestMove(t *testing.T) {
+	for _, tc := range testCases {
+		// build graph
+		g := buildGraph(tc.edges)
+
+		// move from {0} with eps
+		startNode := g.nodes[0]
+		validMoves := g.Move([]Node{startNode}, eps)
+
+		eq := checkEquality(validMoves, tc.outputMove)
+		if !eq {
+			t.Errorf("validMoves: %v expected: %v", validMoves, tc.outputMove)
+		}
+	}
+}
+
 func buildGraph(edges []Edge) *Graph {
 	g := NewGraph()
 	for _, e := range edges {
@@ -76,13 +94,13 @@ func buildGraph(edges []Edge) *Graph {
 	return g
 }
 
-func checkEquality(arr1, arr2 []int) bool {
-	if len(arr1) != len(arr2) {
+func checkEquality(res []Node, expected []int) bool {
+	if len(res) != len(expected) {
 		return false
 	}
 
-	for i, _ := range arr1 {
-		if arr1[i] != arr2[i] {
+	for i, _ := range res {
+		if res[i].Id() != expected[i] {
 			return false
 		}
 	}
