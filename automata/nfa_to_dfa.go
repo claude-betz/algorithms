@@ -255,8 +255,10 @@ func SubsetConstruction(nfa *Graph) *Graph {
 
 			// U not in DStates add as unmarked
 			index = computeTIndex(U)
+			
+			_, ok := markMap[index]
 
-			if !markMap[index] {
+			if !ok && len(U) != 0 {
 				// increment id count
 				count = count +1
 				
@@ -277,8 +279,6 @@ func SubsetConstruction(nfa *Graph) *Graph {
 
 		// pop off T
 		dStates = dStates[1:]	
-
-		break
 	}
 
 	return dfa
@@ -296,9 +296,4 @@ func (g *Graph) Print() {
 		fmt.Println()
 	} 
 }
-
-func main() {
-	
-}
-
 

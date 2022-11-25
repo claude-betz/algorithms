@@ -16,6 +16,7 @@ var testCases = []struct {
 	outputBFS []int
 	outputEps []int
 	outputMove []int
+	outputDFA []Edge
 }{
 	{
 		[]Edge{
@@ -27,6 +28,18 @@ var testCases = []struct {
 		[]int{0, 1, 3, 2, 4},
 		[]int{0, 1, 3},
 		[]int{1, 3},
+		[]Edge{
+			Edge{
+				DFAState{0, "013", []Node{NFAState{0}, NFAState{1}, NFAState{3}}},
+				DFAState{1, "2", []Node{NFAState{2}}},
+				'a',
+			},
+			Edge{
+				DFAState{0, "013", []Node{NFAState{0}, NFAState{1}, NFAState{3}}},
+				DFAState{2, "4", []Node{NFAState{4}}},
+				'b',
+			},
+		},
 	},
 }
 
@@ -100,6 +113,7 @@ func TestNFAToDFA(t *testing.T) {
 		nfa.Print()
 
 		fmt.Println("dfa")
+		fmt.Printf("%v\n", dfa)
 		dfa.Print()
 	}
 } 
