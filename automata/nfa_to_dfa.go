@@ -9,6 +9,8 @@ package main
 import (
 	"bytes"
 	"fmt"
+	"io"
+	"algorithms/automata/graph"
 )
 
 const (
@@ -18,16 +20,6 @@ const (
 var (
 	alphabet = []rune{'a', 'b'}
 )
-
-// graph
-type Graph struct {
-	nodes map[int]Node
-	adjList map[int][]*Edge
-}
-
-type Node interface{
-	Id() int
-} 
 
 type NFAState struct {
 	id int
@@ -39,151 +31,17 @@ func (n NFAState) Id() int {
 
 type DFAState struct {
 	id int
+
 	// idea index is to concatenate ordered nfaStates for an efficient lookup
 	index string
-	nfaStates []Node
+	nfaStates []graph.Node
 }
 
 func (n DFAState) Id() int {
 	return n.id
 }
 
-type Edge struct {
-	src, dst Node
-	accepts rune
-}
-
-func NewGraph() *Graph {
-	return &Graph{
-		nodes: make(map[int]Node),
-		adjList: make(map[int][]*Edge),
-	}
-}
-
-func (g *Graph) AddEdge(src, dst Node, accepts rune) {	
-	// add nodes
-	g.nodes[src.Id()] = src 
-	g.nodes[dst.Id()] = dst
-
-	// add edge
-	e := &Edge{
-		src: src,
-		dst: dst,
-		accepts: accepts,
-	}
-
-	_, ok := g.adjList[e.src.Id()]  
-
-	if !ok {
-		g.adjList[e.src.Id()] = []*Edge{e}
-	} else {  
-		g.adjList[e.src.Id()] = append(g.adjList[e.src.Id()], e)
-	}
-}
-
-func (g *Graph) RecursiveBFS(res *[]Node, n []Node) {
-	// print everything in array
-	for _, node := range n {
-		*res = append(*res, node)
-	}
-	fmt.Println()
-
-	// recurse 
-	for _, node := range n {
-		// add all children to array
-		var nodeArr []Node 
-
-		for _, edge := range g.adjList[node.Id()] {
-			nodeArr = append(nodeArr, edge.dst)
-		}
-		
-		if len(nodeArr) != 0 {
-			g.RecursiveBFS(res, nodeArr)
-		}
-	}
-}
-
-func (g *Graph) IterativeBFS(n Node) []Node {
-	var res []Node
-
-	// queue for BFS
-	var queue []Node
-	
-	// visited array: default false
-	var visited = make(map[Node]bool, len(g.nodes))
-
-	// queue start
-	queue = append(queue, n)
-	visited[n] = true
-
-	for {
-		if len(queue) == 0 {
-			break
-		}
-
-		// deque front node
-		v := queue[0]
-		// pop
-		queue = queue[1:] 
-
-		// append to res
-		res = append(res, v)
-
-		for _, edge := range g.adjList[v.Id()] {
-
-			// if not visited add to queue
-			dst := edge.dst
-			if !visited[dst] {
-				visited[dst] = true
-				queue = append(queue, dst)
-			}
-		}
-	}
-	return res
-}
-
-func (g *Graph) EpsilonClosure(T []Node) []Node {
-	// initialise epsilon closure
-	var epsClosure []Node
-
-	// use stack
-	stack := make([]Node, 0)
-
-	// push all states of T onto stack
-	for _, state := range T {
-		epsClosure = append(epsClosure, state)
-		stack = append(stack, state)
-	}
-
-	// while stack is not empty
-	for {
-		if len(stack) == 0 {
-			break
-		}
-
-		// deque t (last item)
-		t := stack[len(stack)-1]
-		// pop t
-		stack = stack[:len(stack)-1]
-
-		// iterate all states u with edge from t to u
-		for _, edge := range g.adjList[t.Id()] {
-			// only epsilon edges
-			if edge.accepts == eps{
-				u := edge.dst		
-
-				// add to eps closure
-				epsClosure = append(epsClosure, u)
-
-				// push to stack
-				stack = append(stack, u)
-			}
-		}
-	}
-	return epsClosure
-}
-
-func computeTIndex(T []Node) string {
+func computeTIndex(T []graph.Node) string {
 	var tIndex bytes.Buffer
 	for _, n := range T {
 		tIndex.WriteString(fmt.Sprintf("%d", n.Id()))
@@ -191,25 +49,7 @@ func computeTIndex(T []Node) string {
 	return tIndex.String()
 }
 
-
-func (g *Graph) Move(T []Node, c rune) []Node {
-	var res []Node
-	// for each of the nodes in T
-	for _, node := range T {
-		// edges leaving this node
-		edges := g.adjList[node.Id()]
-
-		for _, edge := range edges {
-			// check for edge that accepts c
-			if edge.accepts == c {
-				res = append(res, edge.dst)	
-			}	
-		}	
-	}
-	return res
-}
-
-func SubsetConstruction(nfa *Graph) *Graph {
+func SubsetConstruction(nfa *graph.Graph) *graph.Graph {
 	// DStates
 	var dStates []DFAState
 		
@@ -217,11 +57,11 @@ func SubsetConstruction(nfa *Graph) *Graph {
 	var markMap = make(map[string]bool, 0)
 
 	count := 0
-	dfa := NewGraph()
+	dfa := graph.NewGraph()
 	
 	// first DState = epsilonClosure(s0)
-	nfaStartNode := nfa.nodes[0]
-	epsClosure := nfa.EpsilonClosure([]Node{nfaStartNode})
+	nfaStartNode := nfa.Nodes[0]
+	epsClosure := nfa.EpsilonClosure([]graph.Node{nfaStartNode})
 	index := computeTIndex(epsClosure)
 
 	// add to DStates
@@ -244,7 +84,7 @@ func SubsetConstruction(nfa *Graph) *Graph {
 		
 		// check states 
 		T := dStates[0]	
-		
+	
 		// mark T
 		markMap[T.index] = true
 
@@ -284,16 +124,45 @@ func SubsetConstruction(nfa *Graph) *Graph {
 	return dfa
 }
 
-func (g *Graph) Print() {
-	// for each node
-	for n := range g.adjList {
-		fmt.Printf("[%d]:", n)
+func NfaSimulation(g *graph.Graph, input string, acceptingStates []int) bool {
+	buf := bytes.NewBufferString(input)
+	alreadyOn := make(map[int]bool, len(g.Nodes))
 
-		for _, e := range g.adjList[n] {
-			fmt.Printf(" Move[%d, %s] = %d", n, string(e.accepts), e.dst.Id())
-		}
+	s0 := g.Nodes[0]
+	S := g.EpsilonClosure([]graph.Node{s0})
+	c, _, err := buf.ReadRune()
+			
+	for {
+		if err == io.EOF {
+			break
+		}	
 
-		fmt.Println()
+		S = g.EpsilonClosure(g.Move(S, c))
+		c, _, err = buf.ReadRune()
+	}
+
+	for _, s := range S {
+		alreadyOn[s.Id()] = true	
 	} 
+
+	for _, accepting := range acceptingStates {
+		if alreadyOn[accepting] {
+			return true
+		}
+	}
+	return false
 }
+
+//func (g *Graph) AddState(s Node, oldStates *[]Node, alreadyOn map[Node]bool) {
+//	*oldStates = append(*oldStates, s.Id())
+//	alreadyOn[s.Id()] = true
+//
+//	for _, state := range g.Move([]Node{s}, eps) {
+//		if !alreadyOn[state] {
+//			g.AddState(state, oldStates)
+//		}		
+//	}
+//}
+
+
 

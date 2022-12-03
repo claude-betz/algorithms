@@ -9,82 +9,26 @@ package main
 import (
 	"testing"
 	"fmt"
+	"algorithms/automata/graph"
 )
 
 var testCases = []struct {
-	edges []Edge
+	edges []graph.Edge
 	outputBFS []int
 	outputEps []int
 	outputMove []int
 }{
 	{
-		[]Edge{
-			Edge{NFAState{0}, NFAState{1}, eps},
-			Edge{NFAState{1}, NFAState{2}, 'a'},
-			Edge{NFAState{0}, NFAState{3}, eps},
-			Edge{NFAState{3}, NFAState{4}, 'b'},
+		[]graph.Edge{
+			graph.Edge{NFAState{0}, NFAState{1}, eps},
+			graph.Edge{NFAState{1}, NFAState{2}, 'a'},
+			graph.Edge{NFAState{0}, NFAState{3}, eps},
+			graph.Edge{NFAState{3}, NFAState{4}, 'b'},
 		},
 		[]int{0, 1, 3, 2, 4},
 		[]int{0, 1, 3},
 		[]int{1, 3},
 	},
-}
-
-func TestBFS(t *testing.T) {
-	for _, tc := range testCases {
-		// build graph
-		g := buildGraph(tc.edges)
-
-		// perform iterative BFS from start=0
-		itrBFS := g.IterativeBFS(NFAState{0})
-		
-		// perform recursive BFS from start=0
-		var recBFS []Node
-		g.RecursiveBFS(&recBFS, []Node{NFAState{0}})
-		
-		// check equality of recursive BFS to expected
-		eq := checkEquality(recBFS, tc.outputBFS) 
-		if !eq {
-			t.Errorf("recBFS: %v expected: %v", recBFS, tc.outputBFS)
-		}
-
-		// check equality of iterative BFS to expected
-		eq = checkEquality(itrBFS, tc.outputBFS)	
-		if !eq {
-			t.Errorf("itrBFS: %v expected: %v", itrBFS, tc.outputBFS)
-		}
-	}
-}
-
-func TestEpsClosure(t *testing.T) {
-	for _, tc := range testCases {
-		// build graph
-		g := buildGraph(tc.edges)
-
-		// get eps closure
-		epsClosure := g.EpsilonClosure([]Node{NFAState{0}})
-
-		eq := checkEquality(epsClosure, tc.outputEps)
-		if !eq {
-			t.Errorf("epsClosure: %v expected: %v", epsClosure, tc.outputEps)	
-		} 
-	}
-}
-
-func TestMove(t *testing.T) {
-	for _, tc := range testCases {
-		// build graph
-		g := buildGraph(tc.edges)
-
-		// move from {0} with eps
-		startNode := g.nodes[0]
-		validMoves := g.Move([]Node{startNode}, eps)
-
-		eq := checkEquality(validMoves, tc.outputMove)
-		if !eq {
-			t.Errorf("validMoves: %v expected: %v", validMoves, tc.outputMove)
-		}
-	}
 }
 
 func TestNFAToDFA(t *testing.T) {
@@ -104,15 +48,30 @@ func TestNFAToDFA(t *testing.T) {
 	}
 } 
 
-func buildGraph(edges []Edge) *Graph {
-	g := NewGraph()
+func TestNFASimulation(t *testing.T) {
+	for _, tc := range testCases {
+		// build NFA
+		nfa := buildGraph(tc.edges)
+
+		// simulate with 
+		validA := NfaSimulation(nfa, "a", []int{2})	
+		validB := NfaSimulation(nfa, "b", []int{4})
+		invalidA := NfaSimulation(nfa, "a", []int{4})
+		invalidB := NfaSimulation(nfa, "b", []int{2})	
+		fmt.Printf("validA: %v, invalidA: %v\n", validA, invalidA)
+		fmt.Printf("validB: %v, invalidB: %v\n", validB, invalidB)
+	}
+}
+
+func buildGraph(edges []graph.Edge) *graph.Graph {
+	g := graph.NewGraph()
 	for _, e := range edges {
-		g.AddEdge(e.src, e.dst, e.accepts)
+		g.AddEdge(e.Src, e.Dst, e.Accepts)
 	}
 	return g
 }
 
-func checkEquality(res []Node, expected []int) bool {
+func checkEquality(res []graph.Node, expected []int) bool {
 	if len(res) != len(expected) {
 		return false
 	}
@@ -124,4 +83,3 @@ func checkEquality(res []Node, expected []int) bool {
 	}
 	return true
 }
-
