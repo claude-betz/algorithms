@@ -8,7 +8,7 @@ type Tag string
 
 const (
 	TagPunct Tag = "punctuation"
-	TagId = "identifier"
+	TagId Tag = "identifier"
 )
 
 const EOF string = "!"

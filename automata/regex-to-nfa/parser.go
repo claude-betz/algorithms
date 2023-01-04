@@ -13,66 +13,35 @@ func matchPunctuation(t *Token, options ...string) (string, error) {
 	return "", fmt.Errorf("unknown token: %s", t)
 }
 
-func union(l *Lexer) (*node, error) {	
-	n1, err1 := concat(l)
-	n2, err2 := unionTail(l)
-
-	// construct union NFA
-	return n1, nil
+func matchTokenTag(t *Token, tag Tag) (bool, error) {
+	if t.Tag == tag {
+		return true, nil 
+	}
+	return false, fmt.Errorf("unknown tag: %s", tag)
 }
 
-func unionTail(l *Lexer) (*node, error) {
+func closure(l *Lexer) (node, error) {
+	n, err := value(l)
+	if err != nil {
+		return nil, err
+	}
+
+	n, err = closureTail(l)
+	if err != nil {
+		return nil, err
+	}
+
+	return n, err
+}
+
+func closureTail(l *Lexer) (node, error) {
 	t, err := l.ReadToken()
 	if err != nil {
 		return nil, err
 	}
-
-	_, err = matchPunctuation(t, "|", EOF)	
-	if err != nil {
-		return nil, err
-	}
-
-	n, err := concat(l) 
-
-	return unionTail(l)
-}
-
-func concat(l *Lexer) (*node, error) {
-	closure(l)
-	concatTail(l)
-
-	// construct concat NFA
-}
-
-func concatTail(l *Lexer) (*node, error) {
-	t, err := l.ReadToken()
-	if err != nil {
-		return nil, err
-	}
-
-	// match tag for cocat
-	if t.Tag == TagId {
-		closure(l)
-	}
-
-	concatTail(l)
-}
-
-func closure(l *Lexer) (*node, error) {
-	value(l)
-	closureTail(l)
-
-	// construct closure NFA
-}
-
-func closureTail(l *Lexer) (*node, error) {
-	t, err := l.ReadToken()
-	if err != nil {
-		return nil, err
-	}
-	fmt.Printf("token: %s", t.Value)
+	fmt.Printf(t.Value)
 	
-	_, err = matchPunctuation(t, "*", EOF)
+	_, err = matchPunctuation(t, "*")
 	if err != nil {
 		return nil, err
 	}
@@ -80,32 +49,36 @@ func closureTail(l *Lexer) (*node, error) {
 	return closureTail(l)
 }
 
-func value(l *Lexer) (*node, error) {
+func value(l *Lexer) (node, error) {
 	t, err := l.ReadToken()
 	if err != nil {
-		// error
+		return nil, err
 	}
-	fmt.Printf("token: %s", t.Value)
+	fmt.Printf(t.Value)
 	
 	switch t.Tag {
 		case TagId:
 			// construct value NFA
-			return &Value{t.Value}, nil 
+			return &ValueNode{}, nil 
 		case TagPunct:	
-			matchPunctuation(t, "(")
+			_, err := matchPunctuation(t, "(")
 			if err != nil {
-				return nil, fmt.Errorf("wrong token in idlst: %s", err)
+				return nil, fmt.Errorf("wrong punctuation %s", err)
 			}
 
-			n, err := union(l)
-
-			matchPunctuation(t, ")")
+			n, err := closure(l)
 			if err != nil {
-				return nil, fmt.Errorf("wrong token in idlst: %s", err)
+				return nil, fmt.Errorf("wrong punctutation %s", err)
+			}
+
+			_, err = matchPunctuation(t, ")")
+			if err != nil {
+				return nil, fmt.Errorf("wrong punctuation %s", err)
 			}
 
 			// construct value NFA
 			return n, err
 	}
+	return nil, nil
 }
 
