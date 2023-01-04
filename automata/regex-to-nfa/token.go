@@ -26,6 +26,8 @@ func (tk Token) String() string {
 }
 
 var punctuationSymbol = []rune {
+	'(', // left parenthesis
+	')', // right parenthesis
 	'|', // union
 	'.', // concatenation
 	'*', // closure
