@@ -8,7 +8,7 @@ type Tag string
 
 const (
 	TagPunct Tag = "punctuation"
-	TagId Tag = "identifier"
+	TagId    Tag = "identifier"
 )
 
 const EOF string = "!"
@@ -25,7 +25,7 @@ func (tk Token) String() string {
 	return fmt.Sprintf("{%q}", tk.Value)
 }
 
-var punctuationSymbol = []rune {
+var punctuationSymbol = []rune{
 	'(', // left parenthesis
 	')', // right parenthesis
 	'|', // union

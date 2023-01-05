@@ -6,9 +6,9 @@ import (
 
 var tests = []struct {
 	alphabet []rune
-	regex string
-	input []string
-	output []bool
+	regex    string
+	input    []string
+	output   []bool
 }{
 	{
 		[]rune{'a', 'b'},
@@ -19,5 +19,5 @@ var tests = []struct {
 }
 
 func TestRegexToNFA(t *testing.T) {
-	
+
 }

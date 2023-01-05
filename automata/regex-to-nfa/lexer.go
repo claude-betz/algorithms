@@ -1,24 +1,24 @@
 package main
 
 import (
-	"fmt"
 	"errors"
+	"fmt"
 	"unicode"
 )
 
 var (
-	tagError = errors.New("can not tag") 
-	errEOF = errors.New("end of file")
+	tagError = errors.New("can not tag")
+	errEOF   = errors.New("end of file")
 )
 
 type tagval struct {
-	Tag Tag
+	Tag   Tag
 	Value string
 }
 
 type Lexer struct {
 	input []rune
-	pos int
+	pos   int
 }
 
 func NewLexer(input string) *Lexer {
@@ -31,15 +31,15 @@ func (l *Lexer) ReadToken() (*Token, error) {
 		if err == errEOF {
 			return eof, nil
 		}
-		return nil, err 
+		return nil, err
 	}
 	l.pos += n
 
-	taggers := []func(input []rune) (*tagval, error) {
+	taggers := []func(input []rune) (*tagval, error){
 		readPunctuation,
 		readId,
 	}
-	
+
 	for _, tagger := range taggers {
 		tv, err := tagger(l.input[l.pos:])
 		if err == nil {
@@ -52,6 +52,10 @@ func (l *Lexer) ReadToken() (*Token, error) {
 		}
 	}
 	return nil, fmt.Errorf("cannot recognise rune: %c", l.input[l.pos])
+}
+
+func (l *Lexer) UnreadToken(t *Token) {
+	l.pos -= len(t.Value)
 }
 
 func skipWhitespace(input []rune) (int, error) {
@@ -69,13 +73,12 @@ func readPunctuation(input []rune) (*tagval, error) {
 		return &tagval{TagPunct, fmt.Sprintf("%c", r)}, nil
 	}
 	return nil, tagError
-} 
+}
 
 func readId(input []rune) (*tagval, error) {
 	r := input[0]
 	if !unicode.IsLetter(input[0]) {
 		return nil, tagError
 	}
-	return &tagval{TagId, string(r)}, nil	
+	return &tagval{TagId, string(r)}, nil
 }
-

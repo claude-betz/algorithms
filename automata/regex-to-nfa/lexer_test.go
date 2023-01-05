@@ -5,7 +5,7 @@ import (
 )
 
 var tests = []struct {
-	regex []rune
+	regex  []rune
 	tokens []*Token
 }{
 	{
@@ -24,14 +24,14 @@ func testLexing(t *testing.T) {
 
 		var lexedTokens []*Token
 		for tk, _ := lex.ReadToken(); tk.Value != EOF; tk, _ = lex.ReadToken() {
-			lexedTokens = append(lexedTokens, tk)	
+			lexedTokens = append(lexedTokens, tk)
 		}
 
 		// validate
 		for i, expectedToken := range test.tokens {
 			if !areEqual(expectedToken, lexedTokens[i]) {
-				t.Errorf("expected: %v but got: %v", expectedToken, lexedTokens[i])		
-			}		
+				t.Errorf("expected: %v but got: %v", expectedToken, lexedTokens[i])
+			}
 		}
 	}
 }
@@ -39,7 +39,6 @@ func testLexing(t *testing.T) {
 func areEqual(a, b *Token) bool {
 	if a.Tag == b.Tag && a.Value == b.Value {
 		return true
-	} 
+	}
 	return false
 }
-
