@@ -2,22 +2,13 @@ package main
 
 import (
 	"fmt"
-	"strings"
 )
 
-func matchPunctuation(t *Token, options ...string) (string, error) {
-	s := strings.Join(options, "")
-	if t.Tag == TagPunct && strings.Index(s, t.Value) >= 0 {
+func matchCharacter(t *Token, c string) (string, error) {
+	if t.Value == c {
 		return t.Value, nil
 	}
-	return "", fmt.Errorf("unknown token: %s", t)
-}
-
-func matchTokenTag(t *Token, tag Tag) (bool, error) {
-	if t.Tag == tag {
-		return true, nil 
-	}
-	return false, fmt.Errorf("unknown tag: %s", tag)
+	return "", fmt.Errorf("character doesn't match")
 }
 
 func closure(l *Lexer) (node, error) {
@@ -39,14 +30,18 @@ func closureTail(l *Lexer) (node, error) {
 	if err != nil {
 		return nil, err
 	}
-	fmt.Printf(t.Value)
 	
-	_, err = matchPunctuation(t, "*")
-	if err != nil {
-		return nil, err
-	}
+	if t.Value == "*" {	
+		fmt.Printf(t.Value)
+		n, err := closureTail(l)
+		if err != nil {
+			return n, err
+		}
+	} else {
+		l.UnreadToken(t)
+	} 
 
-	return closureTail(l)
+	return nil, nil
 }
 
 func value(l *Lexer) (node, error) {
@@ -54,29 +49,32 @@ func value(l *Lexer) (node, error) {
 	if err != nil {
 		return nil, err
 	}
-	fmt.Printf(t.Value)
 	
 	switch t.Tag {
 		case TagId:
 			// construct value NFA
+			fmt.Printf(t.Value)
 			return &ValueNode{}, nil 
 		case TagPunct:	
-			_, err := matchPunctuation(t, "(")
+			c, err := matchCharacter(t, "(")
 			if err != nil {
-				return nil, fmt.Errorf("wrong punctuation %s", err)
-			}
-
+				return nil, err
+			}	
+			fmt.Printf(c)
+			
 			n, err := closure(l)
 			if err != nil {
 				return nil, fmt.Errorf("wrong punctutation %s", err)
 			}
 
-			_, err = matchPunctuation(t, ")")
+			t, err := l.ReadToken()
 			if err != nil {
-				return nil, fmt.Errorf("wrong punctuation %s", err)
+				return nil, err
 			}
 
-			// construct value NFA
+			c, err = matchCharacter(t, ")")
+			fmt.Printf(c)
+
 			return n, err
 	}
 	return nil, nil
