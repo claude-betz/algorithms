@@ -31,16 +31,13 @@ func closureTail(l *Lexer) (node, error) {
 		return nil, err
 	}
 	
-	if t.Value == "*" {	
-		fmt.Printf(t.Value)
-		n, err := closureTail(l)
-		if err != nil {
-			return n, err
-		}
-	} else {
+	c, err := matchCharacter(t, "*")
+	if err != nil {
 		l.UnreadToken(t)
-	} 
+		return nil, nil
+	}
 
+	fmt.Printf(c)
 	return nil, nil
 }
 
