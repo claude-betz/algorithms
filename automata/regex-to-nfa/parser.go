@@ -4,11 +4,65 @@ import (
 	"fmt"
 )
 
+func peek(l *Lexer) (*Token, error) {
+	t, err := l.ReadToken()
+	if err != nil {
+		return nil, err
+	}
+
+	l.UnreadToken(t)
+	return t, nil
+}
+
 func matchCharacter(t *Token, c string) (string, error) {
 	if t.Value == c {
 		return t.Value, nil
 	}
 	return "", fmt.Errorf("character doesn't match")
+}
+
+func matchTag(t *Token, tag Tag) bool {
+	if t.Tag == tag {
+		return true
+	}
+	return false
+}
+
+func concat(l *Lexer) (node, error) {
+	n, err := closure(l)
+	if err != nil {
+		return nil, err
+	}
+
+	n, err = concatTail(l)
+	if err != nil {
+		return nil, err
+	}
+
+	return n, err
+}
+
+func concatTail(l *Lexer) (node, error) {
+	t, err := peek(l)
+	if err != nil {
+		return nil, err
+	}
+	
+	if !matchTag(t, TagId) {
+		return nil, nil				
+	}
+
+	n, err := closure(l)
+	if err != nil {
+		return nil, err
+	}
+
+	n, err = concatTail(l)
+	if err != nil {
+		return nil, err
+	}
+
+	return n, err
 }
 
 func closure(l *Lexer) (node, error) {
@@ -26,18 +80,21 @@ func closure(l *Lexer) (node, error) {
 }
 
 func closureTail(l *Lexer) (node, error) {
-	t, err := l.ReadToken()
+	t, err := peek(l)
 	if err != nil {
 		return nil, err
 	}
 	
-	c, err := matchCharacter(t, "*")
+	_, err = matchCharacter(t, "*")
 	if err != nil {
-		l.UnreadToken(t)
 		return nil, nil
 	}
 
-	fmt.Printf(c)
+	t, err = l.ReadToken()
+	if err != nil {
+		return nil, err
+	}
+	fmt.Printf(t.Value)
 	return nil, nil
 }
 
@@ -59,7 +116,7 @@ func value(l *Lexer) (node, error) {
 			}	
 			fmt.Printf(c)
 			
-			n, err := closure(l)
+			n, err := concat(l)
 			if err != nil {
 				return nil, fmt.Errorf("wrong punctutation %s", err)
 			}
