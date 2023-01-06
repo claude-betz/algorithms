@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"strings"
 )
 
 func peek(l *Lexer) (*Token, error) {
@@ -14,11 +15,12 @@ func peek(l *Lexer) (*Token, error) {
 	return t, nil
 }
 
-func matchCharacter(t *Token, c string) (string, error) {
-	if t.Value == c {
+func matchCharacter(t *Token, opts ...string) (string, error) {
+	s := strings.Join(opts, "")
+	if t.Tag == TagPunct && strings.Index(s, t.Value) >= 0 {
 		return t.Value, nil
 	}
-	return "", fmt.Errorf("character doesn't match")
+	return "", fmt.Errorf("unknown token %s", t)
 }
 
 func matchTag(t *Token, tag Tag) bool {
@@ -85,8 +87,11 @@ func closureTail(l *Lexer) (node, error) {
 		return nil, err
 	}
 	
-	_, err = matchCharacter(t, "*")
-	if err != nil {
+	c, err := matchCharacter(t, "*", EOF)
+	if c == EOF {
+		return nil, fmt.Errorf("end of file")
+	}
+	if err != nil {	
 		return nil, nil
 	}
 
@@ -109,7 +114,7 @@ func value(l *Lexer) (node, error) {
 			// construct value NFA
 			fmt.Printf(t.Value)
 			return &ValueNode{}, nil 
-		case TagPunct:	
+		case TagPunct:		
 			c, err := matchCharacter(t, "(")
 			if err != nil {
 				return nil, err
@@ -127,6 +132,9 @@ func value(l *Lexer) (node, error) {
 			}
 
 			c, err = matchCharacter(t, ")")
+			if err != nil {
+				return nil, err
+			}
 			fmt.Printf(c)
 
 			return n, err
