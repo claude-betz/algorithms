@@ -30,6 +30,50 @@ func matchTag(t *Token, tag Tag) bool {
 	return false
 }
 
+func union(l *Lexer) (node, error) {
+	n, err := concat(l)
+	if err != nil {
+		return nil, err
+	}
+
+	n, err = unionTail(l)
+	if err != nil {
+		return nil, err
+	}
+
+	return n, err
+}
+
+func unionTail(l *Lexer) (node, error) {
+	t, err := peek(l)
+	if err != nil {
+		return nil, err
+	}
+	
+	c, err := matchCharacter(t, "|", EOF)
+	if c == EOF {
+		return nil, fmt.Errorf("end of file")
+	}
+	if err != nil {	
+		return nil, nil
+	}
+
+	t, err = l.ReadToken()
+	fmt.Printf(t.Value)
+
+	n, err := concat(l)
+	if err != nil {
+		return nil, err
+	}
+	
+	n, err = unionTail(l)
+	if err != nil {
+		return nil, err
+	}
+
+	return n, err
+}
+
 func concat(l *Lexer) (node, error) {
 	n, err := closure(l)
 	if err != nil {
@@ -121,7 +165,7 @@ func value(l *Lexer) (node, error) {
 			}	
 			fmt.Printf(c)
 			
-			n, err := concat(l)
+			n, err := union(l)
 			if err != nil {
 				return nil, fmt.Errorf("wrong punctutation %s", err)
 			}
