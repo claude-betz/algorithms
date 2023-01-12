@@ -28,13 +28,15 @@ func (n *nfa) AddState(char rune, accepting bool) *nfa {
 }
 
 func (n nfa) Print() {
-	state := 0
-	next := state
+	n.printNFA(0, 0)
+}
+
+func (n nfa) printNFA(state, next int) {
 	var queue []*nfa
 	
-	for k, v := range n.edges {
-		fmt.Printf("[%d]-%s->[%d]\n", state, string(k), next)		
+	for k, v := range n.edges {	
 		next++
+		fmt.Printf("[%d]-%s->[%d]\n", state, string(k), next)		
 		queue = append(queue, v)
 	}
 
@@ -48,11 +50,7 @@ func (n nfa) Print() {
 		curr := queue[0]
 		queue = queue[1:]
 
-		for k, v := range curr.edges {
-			fmt.Printf("[%d]-%s->[%d]\n", state, string(k), next)		
-			next++
-			queue = append(queue, v)
-		}
+		curr.printNFA(state, next)
 	}
 }
 
@@ -62,9 +60,11 @@ func main() {
 		edges: make(map[rune]*nfa),
 	}
 
-	next :=	n.AddState('a', false)
+	a := n.AddState('a', false)
 	n.AddState('b', false)
 
-	next.AddState('c', true)
+	c := a.AddState('c', false)
+	c.AddState('d', true)
+
 	n.Print()
 }
