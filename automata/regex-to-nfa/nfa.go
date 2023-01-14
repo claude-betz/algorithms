@@ -15,11 +15,6 @@ func (n *nfa) AddState(char rune, accepting bool) *nfa {
 		edges: make(map[rune]*nfa),
 	}
 
-	_, ok := nfa.edges[char]
-	if !ok {
-		// error
-	}
-
 	// add state transition
 	n.edges[char] = nfa
 
@@ -27,21 +22,32 @@ func (n *nfa) AddState(char rune, accepting bool) *nfa {
 	return nfa
 }
 
-func (n nfa) Print() {
-	n.printNFA(0, 0)
-}
-
-func (n nfa) printNFA(state, next int) {
-	var queue []*nfa
+func (n *nfa) Print() {
+	// need to track assigned state numbers
+	var seen = make(map[*nfa]int)
 	
-	for k, v := range n.edges {	
-		next++
-		fmt.Printf("[%d]-%s->[%d]\n", state, string(k), next)		
-		queue = append(queue, v)
+	// queue for bfs
+	var queue []*nfa
+
+	// nextState
+	var stateId = 0
+
+	// populate level 0  
+	for key, nextState := range n.edges {	
+		// increment stateId
+		stateId++
+
+		// print state
+		fmt.Printf("[%d]-%s->[%d]\n", 0, string(key), stateId)
+
+		// add to seen map
+		seen[nextState] = stateId
+
+		// add to queue
+		queue = append(queue, nextState)
 	}
 
 	for {
-		state++
 		if len(queue) == 0 {
 			break
 		}
@@ -50,7 +56,30 @@ func (n nfa) printNFA(state, next int) {
 		curr := queue[0]
 		queue = queue[1:]
 
-		curr.printNFA(state, next)
+		// currStateId
+		currStateId := seen[curr]
+
+		for char, nextState := range curr.edges {			
+			val, ok := seen[nextState]
+
+			// we have not seen this state before
+			if !ok {
+				// increment state
+				stateId++
+
+				// add to val
+				val = stateId
+
+				// add to seen
+				seen[nextState] = stateId	
+
+				// add to queue
+				queue = append(queue, nextState)
+			}
+
+			// print
+			fmt.Printf("[%d]-%s->[%d]\n", currStateId, string(char), val)			
+		}		 
 	}
 }
 
@@ -64,7 +93,10 @@ func main() {
 	n.AddState('b', false)
 
 	c := a.AddState('c', false)
-	c.AddState('d', true)
+	d := c.AddState('d', false)
+	
+	d.AddState('e', true)
+
 
 	n.Print()
 }
