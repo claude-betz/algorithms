@@ -4,6 +4,7 @@ import (
 	"io"
 	"fmt"
 	"bytes"
+	"strings"
 )
 
 const (
@@ -101,12 +102,16 @@ func (n *nfa) Simulate(input string) bool {
 func (n *nfa) PrintNFA() {
 	// need to track assigned state numbers
 	var seen = make(map[*nfa]int)
-	
+	var levelMap = make(map[*nfa]int)	
+
 	// queue for bfs
 	var queue []*nfa
 
 	// nextState
 	var stateId = 0
+
+	// level
+	var level = 1
 
 	// populate level 0  
 	for key, nextStates := range n.edges {	
@@ -120,6 +125,9 @@ func (n *nfa) PrintNFA() {
 			// add to seen map
 			seen[nextState] = stateId
 
+			// add to level map
+			levelMap[nextState] = level
+
 			// add to queue
 			queue = append(queue, nextState)
 		}
@@ -131,12 +139,15 @@ func (n *nfa) PrintNFA() {
 		}
 
 		// deque
-		curr := queue[0]
-		queue = queue[1:]
+		curr := queue[len(queue)-1]
+		queue = queue[:len(queue)-1]
 
 		// currStateId
 		currStateId := seen[curr]
 
+		// currLevel
+		currLevel := levelMap[curr]
+		
 		for char, nextStates := range curr.edges {			
 			for _, nextState := range nextStates {
 				val, ok := seen[nextState]
@@ -152,12 +163,17 @@ func (n *nfa) PrintNFA() {
 					// add to seen
 					seen[nextState] = stateId	
 
+					// add to level
+					levelMap[nextState] = currLevel + 1
+
 					// add to queue
 					queue = append(queue, nextState)
 				}
 
+
+				indent := strings.Repeat("\t", currLevel)
 				// print
-				fmt.Printf("[%d]-%s->[%d]\n", currStateId, string(char), val)
+				fmt.Printf("%s[%d]-%s->[%d]\n", indent, currStateId, string(char), val)
 			}
 		}		 
 	}
