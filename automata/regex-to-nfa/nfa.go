@@ -13,6 +13,63 @@ type nfa struct {
 	edges map[rune][]*nfa
 }
 
+func (n *nfa) GetEndState() *nfa {
+	for _, nextList := range n.edges {
+		for _, elem := range nextList {
+			if elem.accepting {
+				return elem
+			}
+		}
+	}	
+	return nil
+}
+
+func epsilonClosure(T []*nfa) []*nfa {
+	// initialise
+	var epsClosure []*nfa
+
+	// stack
+	stack := make([]*nfa, 0)
+
+	// push all initial states to epsClosure and stack 
+	for _, nfa := range T {
+		epsClosure = append(epsClosure, nfa)
+		stack = append(stack, nfa) 
+	}
+
+	// while stack not empty
+	for {
+		if len(stack) == 0 {
+			break
+		}
+
+		// deque last item
+		t := stack[len(stack)-1]
+		// pop
+		stack = stack[:len(stack)-1]
+
+		// iterate all states reachable via eps
+		for _, nfa := range t.edges[eps] {
+			epsClosure = append(epsClosure, nfa)
+			stack = append(stack, nfa)
+		}
+	}
+
+	return epsClosure 
+}
+
+func Move(T []*nfa, c rune) []*nfa {
+	var res []*nfa
+
+	for _, nfa := range T {
+		val, ok := nfa.edges[c]
+		if ok {
+			res = append(res, val...)
+		}
+	}
+
+	return res
+}
 
 func (n *nfa) PrintNFA() {
 	// need to track assigned state numbers
@@ -77,42 +134,5 @@ func (n *nfa) PrintNFA() {
 			}
 		}		 
 	}
-}
-
-
-func main() {
-	end := []*nfa{
-		&nfa{
-			false,
-			map[rune][]*nfa{},
-		},
-	}
-	
-	nfa1 := &nfa{
-		false,
-		map[rune][]*nfa{
-			'a': end,
-			'b': end,
-		},
-	}
-	
-	nfa2 := &nfa{
-		false,
-		map[rune][]*nfa{
-			'c': end,
-		},
-	}
-
-	start := &nfa{
-		false,
-		map[rune][]*nfa{
-			eps: []*nfa{
-				nfa1,
-				nfa2,
-			},
-		},
-	}	
-
-	start.PrintNFA()
 }
 

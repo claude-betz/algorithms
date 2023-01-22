@@ -5,7 +5,7 @@ import (
 )
 
 var (
-	program = []rune("(a)*")
+	program = []rune("(a|b)*ab*a")
 )
 
 func main() {
@@ -19,5 +19,5 @@ func main() {
 	//
 	//fmt.Printf("%v\n", lexedTokens)
 
-	closure(lex)
+	union(lex)
 }

@@ -4,7 +4,7 @@ import (
 	"testing"
 )
 
-var tests = []struct {
+var testCases2 = []struct {
 	alphabet []rune
 	regex    string
 	input    []string
@@ -19,5 +19,4 @@ var tests = []struct {
 }
 
 func TestRegexToNFA(t *testing.T) {
-
 }

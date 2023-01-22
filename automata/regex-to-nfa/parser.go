@@ -30,7 +30,7 @@ func matchTag(t *Token, tag Tag) bool {
 	return false
 }
 
-func union(l *Lexer) (node, error) {
+func union(l *Lexer) (*nfa, error) {
 	n, err := concat(l)
 	if err != nil {
 		return nil, err
@@ -44,7 +44,7 @@ func union(l *Lexer) (node, error) {
 	return n, err
 }
 
-func unionTail(l *Lexer) (node, error) {
+func unionTail(l *Lexer) (*nfa, error) {
 	t, err := peek(l)
 	if err != nil {
 		return nil, err
@@ -74,7 +74,7 @@ func unionTail(l *Lexer) (node, error) {
 	return n, err
 }
 
-func concat(l *Lexer) (node, error) {
+func concat(l *Lexer) (*nfa, error) {
 	n, err := closure(l)
 	if err != nil {
 		return nil, err
@@ -88,7 +88,7 @@ func concat(l *Lexer) (node, error) {
 	return n, err
 }
 
-func concatTail(l *Lexer) (node, error) {
+func concatTail(l *Lexer) (*nfa, error) {
 	t, err := peek(l)
 	if err != nil {
 		return nil, err
@@ -111,7 +111,7 @@ func concatTail(l *Lexer) (node, error) {
 	return n, err
 }
 
-func closure(l *Lexer) (node, error) {
+func closure(l *Lexer) (*nfa, error) {
 	n, err := value(l)
 	if err != nil {
 		return nil, err
@@ -125,7 +125,7 @@ func closure(l *Lexer) (node, error) {
 	return n, err
 }
 
-func closureTail(l *Lexer) (node, error) {
+func closureTail(l *Lexer) (*nfa, error) {
 	t, err := peek(l)
 	if err != nil {
 		return nil, err
@@ -147,7 +147,7 @@ func closureTail(l *Lexer) (node, error) {
 	return nil, nil
 }
 
-func value(l *Lexer) (node, error) {
+func value(l *Lexer) (*nfa, error) {
 	t, err := l.ReadToken()
 	if err != nil {
 		return nil, err
@@ -157,7 +157,7 @@ func value(l *Lexer) (node, error) {
 		case TagId:
 			// construct value NFA
 			fmt.Printf(t.Value)
-			return &ValueNode{}, nil 
+			return &nfa{}, nil 
 		case TagPunct:		
 			c, err := matchCharacter(t, "(")
 			if err != nil {
