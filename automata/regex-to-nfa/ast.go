@@ -41,7 +41,7 @@ func buildClosure(n *nfa) *nfa {
 		endState,
 	}
 		
-	nfaEndState := n.GetEndState()
+	nfaEndState := GetEndState(n)
 	// set end state as not final
 	nfaEndState.accepting = false
 
@@ -59,7 +59,7 @@ func buildClosure(n *nfa) *nfa {
 
 func buildConcat(n1, n2 *nfa) *nfa {
 	// merge end state of N(s) and start state of N(t)
-	nfa1EndState := n1.GetEndState()
+	nfa1EndState := GetEndState(n1)
 	nfa1EndState.accepting = false	
 	nfa1EndState.edges[eps] = []*nfa{
 		n2,
@@ -90,18 +90,19 @@ func buildUnion(n1, n2 *nfa) *nfa {
 	// add epsilon transition from end state of
 	// 1. N(s) to end state of new NFA
 	// 2. N(t) to end state of new NFA
-	nfa1EndState := n1.GetEndState()
-	nfa2EndState := n2.GetEndState()
-	endStateArr := []*nfa{
-		endState,
-	}
+	nfa1EndState := GetEndState(n1)
+	nfa2EndState := GetEndState(n2)
 
 	// set end states to false
 	nfa1EndState.accepting = false
 	nfa2EndState.accepting = false
 
-	nfa1EndState.edges[eps] = endStateArr 
-	nfa2EndState.edges[eps] = endStateArr
+	nfa1EndState.edges[eps] = []*nfa{
+		endState,
+	}
+	nfa2EndState.edges[eps] = []*nfa{
+		endState,
+	}
 	
 	return startState
 }
@@ -110,8 +111,10 @@ func main() {
 	n1 := buildBaseCase('a')
 	n2 := buildBaseCase('b')
 	n3 := buildUnion(n1, n2) 
+	n4 := buildBaseCase('c')
+	n5 := buildUnion(n3, n4)
 	
 	fmt.Printf("")
 
-	n3.PrintNFA()
+	n5.PrintNFA()
 }

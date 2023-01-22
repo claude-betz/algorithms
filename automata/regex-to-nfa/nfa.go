@@ -15,13 +15,15 @@ type nfa struct {
 	edges map[rune][]*nfa
 }
 
-func (n *nfa) GetEndState() *nfa {
+func GetEndState(n *nfa) *nfa {
 	for _, nextList := range n.edges {
 		for _, elem := range nextList {
 			if elem.accepting {
 				return elem
 			}
+			return GetEndState(elem)
 		}
+		
 	}	
 	return nil
 }
