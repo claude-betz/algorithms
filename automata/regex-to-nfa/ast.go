@@ -1,9 +1,5 @@
 package main
 
-import (
-	"fmt"
-)
-
 func buildBaseCase(char rune) *nfa {
 	startState := &nfa{
 		accepting: false,
@@ -107,14 +103,3 @@ func buildUnion(n1, n2 *nfa) *nfa {
 	return startState
 }
 
-func main() {
-	n1 := buildBaseCase('a')
-	n2 := buildBaseCase('b')
-	n3 := buildUnion(n1, n2) 
-	n4 := buildBaseCase('c')
-	n5 := buildUnion(n3, n4)
-	
-	fmt.Printf("")
-
-	n5.PrintNFA()
-}
