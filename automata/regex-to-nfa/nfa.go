@@ -1,7 +1,9 @@
 package main
 
 import (
+	"io"
 	"fmt"
+	"bytes"
 )
 
 const (
@@ -69,6 +71,29 @@ func Move(T []*nfa, c rune) []*nfa {
 	}
 
 	return res
+}
+
+func (n *nfa) Simulate(input string) bool {
+	buf := bytes.NewBufferString(input)
+
+	S := epsilonClosure([]*nfa{n})
+	c, _, err := buf.ReadRune()
+
+	for {
+		if err == io.EOF {
+			break
+		}
+
+		S = epsilonClosure(Move(S, c))
+		c, _, err = buf.ReadRune()
+	}
+
+	for _, s := range S {
+		if s.accepting {
+			return true
+		}
+	}
+	return false
 }
 
 func (n *nfa) PrintNFA() {

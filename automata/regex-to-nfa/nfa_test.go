@@ -12,25 +12,38 @@ import (
 	[2]-c->[3]
 */
 var (
-	end = []*nfa{
-		&nfa{
-			false,
-			map[rune][]*nfa{},
-		},
+	end = &nfa{
+		true,
+		map[rune][]*nfa{},
 	}
 
-	nfa1 = &nfa{
+	nfa3 = &nfa{
 		false,
 		map[rune][]*nfa{
-			'a': end,
-			'b': end,
+			'a': []*nfa{
+				end,
+			},
+			'b': []*nfa{
+				end,
+			},
 		},
 	}
 	
 	nfa2 = &nfa{
 		false,
 		map[rune][]*nfa{
-			'c': end,
+			'c': []*nfa{
+				end,
+			},
+		},
+	}
+
+	nfa1 = &nfa{
+		false,
+		map[rune][]*nfa{
+			'a': []*nfa{
+				nfa3,
+			},
 		},
 	}
 
@@ -85,9 +98,71 @@ func TestMove(t *testing.T) {
 
 		equal := checkEquality(moves, expectedMoves)
 		if !equal {
-			t.Errorf("moves: %v\n, expectedMoves: %v\n", moves, expectedMoves)
+			t.Errorf("moves: %v\n, expectedmoves: %v\n", moves, expectedMoves)
 		}
 	}
+}
+
+var simTestCases = []struct {
+	nfas []*nfa
+	input [][]string
+	expected [][]bool
+}{
+	{
+		[]*nfa{
+			start,
+		},
+		[][]string{
+			[]string{
+				"a",
+				"b",
+				"c",
+				"aa",
+				"ab",
+			},
+		},
+		[][]bool{
+			[]bool {
+				false,
+				false,
+				true,
+				true,
+				true,
+			},
+		},
+	},
+}
+
+func TestSimulation(t *testing.T) {
+
+	var res []bool
+	for _, tc := range simTestCases {
+		for i, nfa := range tc.nfas {
+			for _, val := range tc.input[i] {
+				accepts := nfa.Simulate(val)
+				res = append(res, accepts)
+			}
+
+			// compare
+			equal := checkBoolEquality(res, tc.expected[i])
+			if !equal{
+				t.Errorf("got: %v, expected: %v", res, tc.expected[i])
+			}
+		}
+	}	
+}
+
+func checkBoolEquality(res []bool, expected []bool) bool {
+	if len(res) != len(expected) {
+		return false
+	}
+
+	for i, _ := range res {
+		if res[i] != expected[i] {
+			return false
+		}
+	}
+	return true
 }
 
 func checkEquality(res []*nfa, expected []*nfa) bool {
