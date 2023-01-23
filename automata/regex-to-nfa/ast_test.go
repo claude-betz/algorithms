@@ -16,6 +16,9 @@ var (
 	n5 = buildUnion(n3, n4) 
 	n6 = buildBaseCase('c')
 	test3 = buildConcat(n5, n6)
+
+	n7 = buildBaseCase('a')
+	test4 = buildClosure(n7)
 )
 
 var testCases = []struct{
@@ -37,6 +40,11 @@ var testCases = []struct{
 		test3,
 		[]string{"ac", "bc", "c", "aa", "a"},
 		[]bool{true, true, false, false, false},
+	},
+	{
+		test4,
+		[]string{"a", "aa", "aaa", "ab"},
+		[]bool{true, true, true, false},
 	},
 }
 
