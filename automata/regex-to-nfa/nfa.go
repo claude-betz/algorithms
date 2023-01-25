@@ -120,7 +120,7 @@ func (n *nfa) PrintNFA() {
 			stateId++
 
 			// print state
-			fmt.Printf("[%d]-%s->[%d]\n", 0, string(key), stateId)
+			fmt.Printf("[%d]--%s->[%d]\n", 0, string(key), stateId)
 
 			// add to seen map
 			seen[nextState] = stateId
@@ -173,7 +173,7 @@ func (n *nfa) PrintNFA() {
 
 				indent := strings.Repeat("\t", currLevel)
 				// print
-				fmt.Printf("%s[%d]-%s->[%d]\n", indent, currStateId, string(char), val)
+				fmt.Printf("%s[%d]--%s->[%d]\n", indent, currStateId, string(char), val)
 			}
 		}		 
 	}
