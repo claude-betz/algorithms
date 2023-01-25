@@ -58,7 +58,7 @@ var (
 	}
 )
 
-var testCases = []struct {
+var testCases2 = []struct {
 	nfas []*nfa
 	expectedEpsClosure []*nfa
 	expectedMoves []*nfa
@@ -80,11 +80,11 @@ var testCases = []struct {
 }
 
 func TestEpsClosure(t *testing.T) {
-	for _, tc := range testCases {
+	for _, tc := range testCases2 {
 		epsClosure := epsilonClosure(tc.nfas)		
 		expectedEpsClosure := tc.expectedEpsClosure
 
-		equal := checkEquality(epsClosure, expectedEpsClosure)
+		equal := checkNfaEquality(epsClosure, expectedEpsClosure)
 		if !equal {
 			t.Errorf("epsClosure: %v\n, expectedEpsClosure: %v\n", epsClosure, expectedEpsClosure)
 		}
@@ -92,11 +92,11 @@ func TestEpsClosure(t *testing.T) {
 }
 
 func TestMove(t *testing.T) {
-	for _, tc := range testCases {
+	for _, tc := range testCases2 {
 		moves := Move(tc.nfas, eps)
 		expectedMoves := tc.expectedMoves
 
-		equal := checkEquality(moves, expectedMoves)
+		equal := checkNfaEquality(moves, expectedMoves)
 		if !equal {
 			t.Errorf("moves: %v\n, expectedmoves: %v\n", moves, expectedMoves)
 		}
@@ -165,7 +165,7 @@ func checkBoolEquality(res []bool, expected []bool) bool {
 	return true
 }
 
-func checkEquality(res []*nfa, expected []*nfa) bool {
+func checkNfaEquality(res []*nfa, expected []*nfa) bool {
 	if len(res) != len(expected) {
 		return false
 	}
