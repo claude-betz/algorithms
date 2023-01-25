@@ -5,19 +5,17 @@ import (
 )
 
 var (
-	program = []rune("(a|b)*ab*a")
+	program = "(a|b)*"
 )
 
 func main() {
-	fmt.Println(string(program))
-	lex := &Lexer{input: program}
+	fmt.Printf("regex: %s\n", program)
 
-	//var lexedTokens []*Token
-	//for tk, _ := lex.ReadToken(); tk.Value != EOF; tk, _ = lex.ReadToken() {
-	//	lexedTokens = append(lexedTokens, tk)
-	//}
-	//
-	//fmt.Printf("%v\n", lexedTokens)
+	ast, err := union(&program)
+	if err != nil {
+		fmt.Printf("%s\n", err)
+	}
 
-	union(lex)
+	fmt.Printf("printing ast\n")
+	ast.PrintNFA()
 }

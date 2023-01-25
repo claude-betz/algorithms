@@ -5,19 +5,40 @@ import (
 )
 
 var readNextTestCases = []struct{
-	program string
-	expected string
+	regex string
+	expectedVal string
+	expectedPeek string
+	expectedNext string	
 }{
 	{
 		"abc",
 		"a",
+		"abc",
+		"bc",
 	},
 }
 
 func TestReadNext(t *testing.T) {
 	for _, tc := range readNextTestCases {
-		val, _ := readNext(&tc.program)
-		if val != tc.expected {
+		pointer := &tc.regex
+		val, _ := readNext(pointer)
+		if val != tc.expectedVal {
+			t.Fail()
+		}
+		if *pointer != tc.expectedNext {
+			t.Fail()
+		}
+	}
+}
+
+func TestPeekNext(t *testing.T) {
+	for _, tc := range readNextTestCases {
+		pointer := &tc.regex
+		val, _ := peekNext(pointer)
+		if val != tc.expectedVal { 
+			t.Fail()
+		}
+		if *pointer != tc.expectedPeek {
 			t.Fail()
 		}
 	}

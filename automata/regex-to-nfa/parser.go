@@ -3,186 +3,175 @@ package main
 import (
 	"fmt"
 	"strings"
+	"unicode"
 )
 
-func peek(l *Lexer) (*Token, error) {
-	t, err := l.ReadToken()
-	if err != nil {
-		return nil, err
-	}
+type eof struct {}
 
-	l.UnreadToken(t)
-	return t, nil
+func (e *eof) Error() string {
+	return "eof"
 }
 
-func matchCharacter(t *Token, opts ...string) (string, error) {
+func matchCharacter(c string, opts ...string) (bool, error) {
 	s := strings.Join(opts, "")
-	if t.Tag == TagPunct && strings.Index(s, t.Value) >= 0 {
-		return t.Value, nil
+	if strings.Index(s, c) >= 0 {
+		return true, nil
 	}
-	return "", fmt.Errorf("unknown token %s", t)
+	return false, fmt.Errorf("unknown token %s", c)
 }
 
-func matchTag(t *Token, tag Tag) bool {
-	if t.Tag == tag {
-		return true
-	}
-	return false
-}
-
-func union(l *Lexer) (*nfa, error) {
-	n, err := concat(l)
+func union(s *string) (*nfa, error) {
+	n1, err := concat(s)
 	if err != nil {
 		return nil, err
 	}
 
-	n, err = unionTail(l)
+	n2, err := unionTail(s)
 	if err != nil {
-		return nil, err
+		return n1, nil
 	}
 
-	return n, err
+	return buildUnion(n1, n2), nil
 }
 
-func unionTail(l *Lexer) (*nfa, error) {
-	t, err := peek(l)
+func unionTail(s *string) (*nfa, error) {
+	next, err := peekNext(s)
 	if err != nil {
 		return nil, err
 	}
 	
-	c, err := matchCharacter(t, "|", EOF)
-	if c == EOF {
-		return nil, fmt.Errorf("end of file")
-	}
+	_, err = matchCharacter(next, "|")
 	if err != nil {	
-		return nil, nil
+		return nil, fmt.Errorf("not union")
 	}
 
-	t, err = l.ReadToken()
-	fmt.Printf(t.Value)
+	_, err = readNext(s)
+	if err != nil {
+		return nil, err
+	}
 
-	n, err := concat(l)
+	n1, err := concat(s)
 	if err != nil {
 		return nil, err
 	}
 	
-	n, err = unionTail(l)
+	n2, err := unionTail(s)
 	if err != nil {
-		return nil, err
+		return n1, nil
 	}
 
-	return n, err
+	return buildUnion(n1, n2), nil
 }
 
-func concat(l *Lexer) (*nfa, error) {
-	n, err := closure(l)
+func concat(s *string) (*nfa, error) {
+	n1, err := closure(s)
 	if err != nil {
 		return nil, err
 	}
 
-	n, err = concatTail(l)
+	n2, err := concatTail(s)
 	if err != nil {
-		return nil, err
+		return n1, nil
 	}
 
-	return n, err
+	return buildConcat(n1, n2), nil
 }
 
-func concatTail(l *Lexer) (*nfa, error) {
-	t, err := peek(l)
+func concatTail(s *string) (*nfa, error) {
+	next, err := peekNext(s)
 	if err != nil {
 		return nil, err
 	}
 	
-	if !matchTag(t, TagId) {
-		return nil, nil				
+	if !unicode.IsLetter(rune(next[0])) {
+		return nil, fmt.Errorf("not concat") 
 	}
 
-	n, err := closure(l)
+	n1, err := closure(s)
 	if err != nil {
 		return nil, err
 	}
 
-	n, err = concatTail(l)
+	n2, err := concatTail(s)
 	if err != nil {
-		return nil, err
+		return n1, nil
 	}
 
-	return n, err
+	return buildConcat(n1, n2), nil
 }
 
-func closure(l *Lexer) (*nfa, error) {
-	n, err := value(l)
-	if err != nil {
-		return nil, err
-	}
-
-	n, err = closureTail(l)
-	if err != nil {
-		return nil, err
-	}
-
-	return n, err
-}
-
-func closureTail(l *Lexer) (*nfa, error) {
-	t, err := peek(l)
+func closure(s *string) (*nfa, error) {
+	n1, err := value(s)
 	if err != nil {
 		return nil, err
 	}
 	
-	c, err := matchCharacter(t, "*", EOF)
-	if c == EOF {
-		return nil, fmt.Errorf("end of file")
+	next, err := peekNext(s)
+	if err != nil {
+		_, ok := err.(*eof)
+		if ok {
+			return n1, nil
+		}
 	}
+
+	_, err = matchCharacter(next, "*")
 	if err != nil {	
-		return nil, nil
+		return n1, nil
 	}
 
-	t, err = l.ReadToken()
-	if err != nil {
-		return nil, err
-	}
-	fmt.Printf(t.Value)
-	return nil, nil
+	return buildClosure(n1), err
 }
 
-func value(l *Lexer) (*nfa, error) {
-	t, err := l.ReadToken()
+func value(s *string) (*nfa, error) {
+	next, err := readNext(s)
+	if err != nil {
+		err, ok := err.(*eof)
+		if ok {
+			return nil, err
+		}
+		return nil, err
+	}
+	
+	if unicode.IsLetter(rune(next[0])) {
+		// construct value NFA
+		return buildBaseCase(rune(next[0])), nil 
+	}
+
+	_, err = matchCharacter(next, "(")
+	if err != nil {
+		return nil, err
+	}	
+	
+	n, err := union(s)
+	if err != nil {
+		return nil, err 
+	}
+
+	next, err = readNext(s)
 	if err != nil {
 		return nil, err
 	}
 	
-	switch t.Tag {
-		case TagId:
-			// construct value NFA
-			fmt.Printf(t.Value)
-			return &nfa{}, nil 
-		case TagPunct:		
-			c, err := matchCharacter(t, "(")
-			if err != nil {
-				return nil, err
-			}	
-			fmt.Printf(c)
-			
-			n, err := union(l)
-			if err != nil {
-				return nil, fmt.Errorf("wrong punctutation %s", err)
-			}
-
-			t, err := l.ReadToken()
-			if err != nil {
-				return nil, err
-			}
-
-			c, err = matchCharacter(t, ")")
-			if err != nil {
-				return nil, err
-			}
-			fmt.Printf(c)
-
-			return n, err
+	_, err = matchCharacter(next, ")")
+	if err != nil {
+		return nil, err
 	}
-	return nil, nil
+
+	return n, nil
 }
 
+func peekNext(s *string) (string, error) {
+	if len(*s) > 0 {
+		return string((*s)[0]), nil
+	}
+	return "", &eof{}
+}
+
+func readNext(s *string) (string, error) {
+	if len(*s) > 0 {
+		next := string((*s)[0])
+		*s = (*s)[1:]
+		return next, nil
+	}
+	return "", &eof{} 
+}
